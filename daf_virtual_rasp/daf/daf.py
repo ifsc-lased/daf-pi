@@ -25,9 +25,8 @@ class DAF(Layer):
         self.nonce = None
         self.imagem_atual = ImagemSB()
         self.last_msg = None                        # ultima mensagem recebida pelo DAF
-
-
-        Layer.__init__(self, None, 0)
+        self.timeout = 120.0
+        Layer.__init__(self, None, self.timeout)
         self.enable()
         self.disable_timeout()          # Desativa o Timeout
         
@@ -125,8 +124,8 @@ class DAF(Layer):
                     return False
 
             elif cod == 10:
-                chaves = ['crt']
-                if (self.__verifica_chaves_mensagem(msg, chaves, 2)):
+                chaves = ['crt', 'sig']
+                if (self.__verifica_chaves_mensagem(msg, chaves, 3)):
                     return True
                 else:
                     return False
@@ -184,22 +183,27 @@ class DAF(Layer):
                     elif cod != 13:
                         return self.__gera_json_resposta_insucesso(
                     Respostas.pedidoMalFormado.value)
-               
-                
+                   
                 
             if cod == 1:
+                self.recarrega_timeout(self.timeout)
                 return self.__processa_registrar(msg)
             elif cod == 2:
+                self.disable_timeout()
                 return self.__processa_confirmarRegistro(msg)
             elif cod == 3:
+                self.recarrega_timeout(self.timeout)
                 return self.__processa_solicitarAutenticacao(msg)
             elif cod == 4:
+                self.disable_timeout()
                 return self.__processa_autorizarDFE(msg)
             elif cod == 5:
                 return self.__processa_apagarAutorizacaoRetida(msg)
             elif cod == 6:
+                self.recarrega_timeout(self.timeout)
                 return self.__processa_removerRegistro(msg)
             elif cod == 7:
+                self.disable_timeout()
                 return self.__processa_confirmarRemocaoRegistro(msg)
             elif cod == 8:
                 return self.__processa_consultarInformacoes()
@@ -210,8 +214,10 @@ class DAF(Layer):
             elif cod == 11:
                 return self.__processa_descarregarRetidos(msg)
             elif cod == 12:
+                self.recarrega_timeout(self.timeout)
                 return self.__processa_alterarModoOperacao(msg)
             elif cod == 13:
+                self.disable_timeout()
                 return self.__processa_confirmarAlterarModoOperacao(msg)
             elif cod == 14:
                 return self.__processa_cancelarProcesso()
@@ -222,7 +228,6 @@ class DAF(Layer):
             elif cod == 9999:
                 return self.__padrao_fabrica()
             
-
     def __verifica_chaves_mensagem(self, msg: str, chaves: list, lenDic: int) -> bool:
         """ Método interno para verificar se o JSON recebido pelo DAF possui as chaves corretas da mensagem
 
@@ -353,6 +358,9 @@ class DAF(Layer):
         Returns:
             str: Resposta do DAF ao pedido
         """
+        if not self.ms.leitura(Guardas.Estado) == Estados.pronto.value:
+            return self.__gera_json_resposta_insucesso(Respostas.estadoIncorreto.value)
+        
         if not self.__valida_mensagem(msg):
             return self.__gera_json_resposta_insucesso(                    Respostas.pedidoMalFormado.value)
 
@@ -428,7 +436,7 @@ class DAF(Layer):
             NumDFe = self.ms.leitura(Guardas.NumDFe)
 
             self.ms.escrita(Guardas.NumDFe, NumDFe+1)
-            if self.ms.leitura(Guardas.NumDFe) == self.ms.leitura(Guardas.MaxDFeModel):
+            if self.ms.leitura(Guardas.NumDFe) == min(self.ms.leitura(Guardas.MaxDFe),self.ms.leitura(Guardas.MaxDFeModel)):
                 # Vai para bloqueado se NumDFe == MaxDFeModel
                 self.ms.escrita(
                     Guardas.Estado, Estados.bloqueado.value)
@@ -589,7 +597,7 @@ class DAF(Layer):
         res['daf'] = self.ms.leitura(Artefatos.IDDAF)
         res['mop'] = self.ms.leitura(Artefatos.modoOperacao)
         res['vsb'] = self.ms.leitura(ParametrosAtualizacao.versaoSB)
-        res['hsb'] = Base64URLDAF.base64URLEncode(self.ms.leitura(ParametrosAtualizacao.resumoSB))
+        res['sig'] = self.ms.leitura(ParametrosAtualizacao.assinaturaSEF)
         res['fab'] = self.ms.leitura(ParametrosAtualizacao.cnpj)
         res['mdl'] = self.ms.leitura(ParametrosAtualizacao.modelo)
         res['cnt'] = self.ms.leitura(Artefatos.contador)
@@ -635,7 +643,7 @@ class DAF(Layer):
         Returns:
             str: Resposta do DAF ao pedido
         """
-        if not self.ms.leitura(Guardas.Estado) == Estados.inativo.value and not self.ms.leitura(Guardas.Estado) == Estados.pronto.value:
+        if not self.ms.leitura(Guardas.Estado) == Estados.inativo.value:
             return self.__gera_json_resposta_insucesso(                Respostas.estadoIncorreto.value)
         
         if not self.__valida_mensagem(msg):
@@ -646,11 +654,17 @@ class DAF(Layer):
 
         certificado = self.ms.leitura(Artefatos.certificado)
         certNovo = Certificado(msg['crt'])
+        assinauraSef = msg['sig']
 
+
+        if not (CriptoDAF.verifica_assinatura_EC_P384(self.imagem_atual.get_assinatura_ateste(), Base64URLDAF.base64URLDecode(assinauraSef), certNovo.chave_publica)):
+             return self.__gera_json_resposta_insucesso(Respostas.assinaturaInvalida.value)
+             
         if not (CriptoDAF.verifica_assinatura_EC_P384(certNovo.conteudo_assinado, certNovo.assinatura, certificado.chave_publica)):
             return self.__gera_json_resposta_insucesso(Respostas.assinaturaInvalida.value)
         
         self.ms.escrita(Artefatos.certificado, certNovo)
+        self.ms.escrita(ParametrosAtualizacao.assinaturaSEF, Base64URLDAF.base64URLDecode(assinauraSef))
 
         return json.dumps({'res': 0},separators=(',', ':'))
 
@@ -664,7 +678,7 @@ class DAF(Layer):
         Returns:
             str: Resposta do DAF ao pedido
         """
-        if not self.ms.leitura(Guardas.Estado) == Estados.pronto.value:
+        if not self.ms.leitura(Guardas.Estado) == Estados.pronto.value and not self.ms.leitura(Guardas.Estado) == Estados.bloqueado.value:
             return self.__gera_json_resposta_insucesso(Respostas.estadoIncorreto.value)
         
         if not self.__valida_mensagem(msg):
@@ -782,6 +796,7 @@ class DAF(Layer):
         self.operacao = False
         self.nonce = None
         self.last_msg = 14
+        self.disable_timeout()
     
         return json.dumps({"res": 0},separators=(',', ':'))
 
@@ -794,7 +809,9 @@ class DAF(Layer):
         Returns:
             str: Resposta do DAF
         """
+        self.last_msg = None
         resposta = {'res': res}
+        self.disable_timeout()
         return json.dumps(resposta,separators=(',', ':'))
 
     def atualizar_sb(self, novaImagem:bytes) -> str:
@@ -829,19 +846,16 @@ class DAF(Layer):
                         Respostas.versaoSBInvalida.value)
                     numAtualizacoes = self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao)
                     self.ms.escrita(ParametrosAtualizacao.falhasAtualizacao, 
-                    numAtualizacoes+1)
-
-                   
+                    numAtualizacoes+1)                 
                     
                 elif resultado == 9:
                     resposta = self.__gera_json_resposta_insucesso(Respostas.modeloInvalido.value)
                     numAtualizacoes = self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao)
                     self.ms.escrita(ParametrosAtualizacao.falhasAtualizacao, numAtualizacoes+1)
                 else:
-                    self.ms.escrita(ParametrosAtualizacao.resumoSB,
-                                    imagem_candidata.get_hash_SB())
-                    self.ms.escrita(ParametrosAtualizacao.versaoSB,
-                                    imagem_candidata.get_versao_SB().decode('utf-8'))
+                    self.ms.escrita(ParametrosAtualizacao.assinaturaSEF,
+                                    imagem_candidata.get_assinatura())
+                    self.ms.escrita(ParametrosAtualizacao.versaoSB,imagem_candidata.get_versao_SB().hex())                                    
                     resposta = {'res': 0}
                     resposta = json.dumps(resposta,separators=(',', ':'))
                    
@@ -880,7 +894,7 @@ class DAF(Layer):
         contador = self.ms.leitura(Artefatos.contador)
         iddaf = self.ms.leitura(Artefatos.IDDAF)
         mop = self.ms.leitura(Artefatos.modoOperacao)
-        resumo = self.ms.leitura(ParametrosAtualizacao.resumoSB)
+        resumo = self.ms.leitura(ParametrosAtualizacao.assinaturaSEF)
         versao = self.ms.leitura(ParametrosAtualizacao.versaoSB)
         numAtualizacoes = bytes([self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao)])
         cnpj = self.ms.leitura(ParametrosAtualizacao.cnpj).encode('utf-8').hex()
@@ -905,3 +919,16 @@ class DAF(Layer):
             resposta = self.atualizar_sb(dados)
             if resposta is not None:
                 self.inferior.envia(bytearray(resposta.encode()), TIPO_t.ENVIARMSG.value)
+
+    def handle_timeout(self):
+        self.__processa_cancelarProcesso()
+
+    def recarrega_timeout(self, timeout:int):
+        """ Define um novo valor de timeout e o recarrega
+
+        Args:
+            timeout (int): tempo de espera.
+        """
+        self.timeout = timeout
+        self.enable_timeout()
+        self.reload_timeout()

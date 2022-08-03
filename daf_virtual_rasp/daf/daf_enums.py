@@ -45,7 +45,7 @@ class Guardas(Enum):
 
 
 class ParametrosAtualizacao(Enum):
-    resumoSB = "resumoSB"
+    assinaturaSEF = "assinaturaSEF"
     versaoSB = "versaoSB"
     falhasAtualizacao = "falhasAtualizacao"
     modelo = "modelo"

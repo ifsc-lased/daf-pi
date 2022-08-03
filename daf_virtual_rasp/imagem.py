@@ -8,9 +8,11 @@ class ImagemSB:
 
     # todos tamanhos em bytes
     VERSAO_TAMANHO = 2
+    MAXDFE_TAMANHO = 2
     HASH_TAMANHO = 32  # 256 bits
-    ASSINATURA_TAMANHO = 256
-    ASSINATURA_ATESTE_TAMANHO = 512
+    ASSINATURA_TAMANHO = 103 #102
+    ASSINATURA_ATESTE_TAMANHO = 103 #103
+    CODIGO_TAMANHO = 2048 
 
     def __init__(self, raw_binario: bytes = b'', path_arquivos: str = './daf_virtual_rasp/resources/imagem/sb'):
         """Inicialização da imagem do SB.
@@ -40,13 +42,15 @@ class ImagemSB:
             # imagem sendo adicionada agora
 
             versao = self._extrai_versao(raw_binario)
-            print('versao novo sb', versao)
+            print("Versão recebida: " ,int.from_bytes(versao,byteorder='big'), "\n")
+            maxdfe = self._extrai_maxdfe(raw_binario)
             hash = self._extrai_hash(raw_binario)
             assinatura = self._extrai_assinatura(raw_binario)
             assinatura_ateste = self._extrai_assinatura_ateste(raw_binario)
             codigo = self._extrai_codigo(raw_binario)
 
             self._set_versao(versao)
+            self._set_maxdfe(maxdfe)
             self._set_hash(hash)
             self._set_assinatura(assinatura)
             self._set_assinatura_ateste(assinatura_ateste)
@@ -58,23 +62,25 @@ class ImagemSB:
         offset = 0
         return raw_binario[offset: offset + self.VERSAO_TAMANHO]
 
-    def _extrai_hash(self, raw_binario: bytes) -> bytes:
+    def _extrai_maxdfe(self, raw_binario: bytes) -> bytes:
         offset = self.VERSAO_TAMANHO
+        return raw_binario[offset: offset + self.MAXDFE_TAMANHO]
+
+    def _extrai_hash(self, raw_binario: bytes) -> bytes:
+        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO
         return raw_binario[offset: offset + self.HASH_TAMANHO]
 
     def _extrai_assinatura(self, raw_binario: bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.HASH_TAMANHO
+        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO + self.HASH_TAMANHO 
         return raw_binario[offset: offset + self.ASSINATURA_TAMANHO]
 
-    def _extrai_assinatura_ateste(self, raw_binario:bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.HASH_TAMANHO + self.ASSINATURA_TAMANHO
-        return raw_binario[offset: offset+self.ASSINATURA_ATESTE_TAMANHO]
+    def _extrai_assinatura_ateste(self, raw_binario: bytes) -> bytes:
+        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO + self.HASH_TAMANHO + self.ASSINATURA_TAMANHO 
+        return raw_binario[offset: offset + self.ASSINATURA_ATESTE_TAMANHO]
 
     def _extrai_codigo(self, raw_binario: bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.HASH_TAMANHO + self.ASSINATURA_TAMANHO + self.ASSINATURA_ATESTE_TAMANHO
+        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO + self.HASH_TAMANHO + self.ASSINATURA_TAMANHO + self.ASSINATURA_ATESTE_TAMANHO 
         return raw_binario[offset:]
-
-
 
     # get/set versao
 
@@ -89,6 +95,20 @@ class ImagemSB:
         with open(self._arquivo_versao(), "rb") as arquivo:
             versao = arquivo.read()
         return versao
+
+    # get/set maxfde
+
+    def _arquivo_maxdfe(self) -> str:
+        return f"{self.path_arquivos}/maxdfe.str"
+
+    def _set_maxdfe(self, maxdfe: bytes) -> None:
+        with open(self._arquivo_maxdfe(), "wb") as arquivo:
+            arquivo.write(maxdfe)
+
+    def get_maxdfe(self) -> bytes:
+        with open(self._arquivo_maxdfe(), "rb") as arquivo:
+            maxdfe = arquivo.read()
+        return maxdfe        
 
     # get/set hash
 
@@ -160,36 +180,39 @@ class ImagemSB:
     # verificacoes
 
     def esta_integro(self) -> bool:
-
-        res = CriptoDAF.verifica_resumo_SHA256(
-            self.get_codigo(), self.get_hash_SB())
+        res = CriptoDAF.verifica_resumo_SHA256((self.get_versao_SB()+self.get_codigo()+self.get_maxdfe()) ,self.get_hash_SB())
         return res
 
     def esta_autentico(self, certificado) -> bool:
-        msg = self.get_versao_SB()+ self.get_codigo()
-        return CriptoDAF.verifica_assinatura__EC_P384(msg, self.get_assinatura(), certificado.chave_publica)
+        msg = self.get_assinatura_ateste()
+        return CriptoDAF.verifica_assinatura_EC_P384(msg, self.get_assinatura(), certificado.chave_publica)
 
-    def esta_autentico_ateste(self, chave) ->bool:
-        msg = self.get_versao_SB() + self.get_codigo()
-        return CriptoDAF.verifica_assinatura__EC_P384(msg, self.get_assinatura_ateste(), chave)
+    def esta_autentico_ateste(self, chave) ->bool:       
+        msg = self.get_hash_SB()
+        return CriptoDAF.verifica_assinatura_EC_P384(msg, self.get_assinatura_ateste(), chave)
+
     # ---
 
     def atualizar(self, novaImagem: 'ImagemSB', certificado, ateste) -> int:
       
         if not novaImagem.esta_integro() or not novaImagem.esta_autentico(certificado):
             return 3
+
         if not novaImagem.esta_autentico_ateste(ateste):
             return 9
+     
         elif novaImagem.get_versao_SB() <= self.get_versao_SB():
             return 8
 
-        self._set_versao(novaImagem.get_versao_SB())
-        self._set_hash(novaImagem.get_hash_SB())
-        self._set_assinatura(novaImagem.get_assinatura())
-        self._set_assinatura_ateste(novaImagem.get_assinatura_ateste())
-        self._set_codigo(novaImagem.get_codigo())
+        # Deixar comentado para não fazer a alteração da imagem, apenas fazer as validações. 
+        # Caso atualize, pode usar a imagem imagem-default que está no resources pra voltar para versão 2
 
-        print("Atualizando imagem do Software Básico...")
+        # self._set_versao(novaImagem.get_versao_SB())
+        # self._set_maxdfe(novaImagem.get_maxdfe())
+        # self._set_hash(novaImagem.get_hash_SB())
+        # self._set_assinatura(novaImagem.get_assinatura())
+        # self._set_assinatura_ateste(novaImagem.get_assinatura_ateste())
+        # self._set_codigo(novaImagem.get_codigo())
 
         return 0
 

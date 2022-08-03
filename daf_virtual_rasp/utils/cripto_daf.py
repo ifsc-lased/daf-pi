@@ -113,7 +113,7 @@ class CriptoDAF:
 
         try:
             pubkey = serialization.load_pem_public_key(pubkey.chave_bytes)
-            pubkey.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
+            pubkey.verify(sig, msg, ec.ECDSA(hashes.SHA384()))
             return True
         except:
             return False
@@ -210,6 +210,18 @@ class CriptoDAF:
         """
         return hashlib.sha256(msg).digest()
 
+    @staticmethod
+    def verifica_resumo_SHA256(msg: bytes, resumo: bytes) -> bytes:
+        """ Método para verificação de SHA-256
+        Args:
+            msg (bytes): Mensagem a ser resumida
+            resumo (bytes): Resumo a ser verificado
+
+        Returns:
+            bytes: Resultado da comparação
+        """
+        return CriptoDAF.gera_resumo_SHA256(msg) == resumo
+        
     @staticmethod
     def verifica_resumo_SHA256(msg: bytes, resumo: bytes) -> bytes:
         """ Método para verificação de SHA-256

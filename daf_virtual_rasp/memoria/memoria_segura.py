@@ -47,7 +47,7 @@ class MemoriaSegura:
         ateste = ChaveCripto(ateste)
         ateste_pub = ChaveCripto(ateste_pub)
         versao = imagem.get_versao_SB().hex()
-        resumo = imagem.get_hash_SB().hex()
+        assinaturaSEF = imagem.get_assinatura()
        
         daf_info = {
             Guardas.MaxDFe.value: 1000,
@@ -69,7 +69,7 @@ class MemoriaSegura:
             ParametrosAtualizacao.modelo.value: modelo,
             ParametrosAtualizacao.cnpj.value: "86096781000185",
             ParametrosAtualizacao.versaoSB.value: versao,
-            ParametrosAtualizacao.resumoSB.value: resumo,
+            ParametrosAtualizacao.assinaturaSEF.value: Base64URLDAF.base64URLEncode(assinaturaSEF),
             ParametrosAtualizacao.falhasAtualizacao.value: 0
         }
         self.iniciaBanco(daf_info)
@@ -126,7 +126,7 @@ class MemoriaSegura:
         ateste = ChaveCripto(ateste)
         ateste_pub = ChaveCripto(ateste_pub)
         versao = imagem.get_versao_SB().hex()
-        resumo = imagem.get_hash_SB().hex()
+        assinaturaSEF = imagem.get_assinatura()
        
         daf_info = {
             Guardas.MaxDFe.value: 1000,
@@ -148,7 +148,7 @@ class MemoriaSegura:
             ParametrosAtualizacao.modelo.value: modelo,
             ParametrosAtualizacao.cnpj.value: "86096781000185",
             ParametrosAtualizacao.versaoSB.value: versao,
-            ParametrosAtualizacao.resumoSB.value: resumo,
+            ParametrosAtualizacao.assinaturaSEF.value: Base64URLDAF.base64URLEncode(assinaturaSEF),
             ParametrosAtualizacao.falhasAtualizacao.value: 0
         }
 
@@ -170,11 +170,12 @@ class MemoriaSegura:
         if obj == Artefatos.chavePrivada or obj == Artefatos.chavePublica or obj == Artefatos.chaveAteste or obj == Artefatos.chaveAtestePublica:
             return ChaveCripto(banco_inteiro[0][obj.value])
 
-        if obj == Artefatos.chaveSEF or obj == Artefatos.chavePAF or obj == ParametrosAtualizacao.resumoSB:
+        if obj == Artefatos.chaveSEF or obj == Artefatos.chavePAF:
             return bytes.fromhex(banco_inteiro[0][obj.value])
         if obj == ParametrosAtualizacao.versaoSB:
             return int(banco_inteiro[0][obj.value],16)
-            
+        if obj == ParametrosAtualizacao.assinaturaSEF:
+            return str(banco_inteiro[0][obj.value])
         return banco_inteiro[0][obj.value]
 
     def escrita(self, obj: Union[Artefatos, Guardas, ParametrosAtualizacao], valor: Union[int, str, bool, bytes, Certificado, ChaveCripto]) -> bool:
@@ -274,10 +275,10 @@ class MemoriaSegura:
                         return False
                 else:
                     return False
-            elif obj == ParametrosAtualizacao.resumoSB:
+            elif obj == ParametrosAtualizacao.assinaturaSEF:
                 if isinstance(valor, bytes):
                     try:
-                        self.banco.update({obj.value: valor.hex()})
+                        self.banco.update({obj.value: Base64URLDAF.base64URLEncode(valor)})
                         return True
                     except:
                         return False

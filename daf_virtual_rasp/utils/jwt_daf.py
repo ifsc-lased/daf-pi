@@ -27,19 +27,19 @@ class JWTDAF:
             if alg == 'RS256':
                 header = {'typ': 'JWT', 'alg': alg}
                 tokenJWT = jwt.encode(
-                    payload, privkey.chave_bytes, algorithm=alg, headers=header).decode('utf-8')
+                    payload, privkey.chave_bytes, algorithm=alg, headers=header)
                 
             elif alg == 'HS256':
                 header = {'typ': 'JWT', 'alg': alg}
                 tokenJWT = jwt.encode(
-                    payload, privkey, algorithm=alg, headers=header).decode('utf-8')
+                    payload, privkey, algorithm=alg, headers=header)
             elif alg=='ES384':
                 header = {'typ': 'JWT', 'alg': alg}
                 tokenJWT = jwt.encode(
-                    payload, privkey.chave_bytes, algorithm=alg, headers=header).decode('utf-8')
+                    payload, privkey.chave_bytes, algorithm=alg, headers=header)
             elif alg == 'ES256':
                 header = {'typ': 'JWT', 'alg': alg}
-                tokenJWT = jwt.encode(payload, privkey.chave_bytes, algorithm='ES256',headers=header).decode('utf-8')
+                tokenJWT = jwt.encode(payload, privkey.chave_bytes, algorithm='ES256',headers=header)
             else:
                 raise Exception(
                     "Algoritmo de assinatura digital não suportado")
@@ -48,15 +48,15 @@ class JWTDAF:
                 key_jwk = jwk.dumps(pubkey.chave_bytes, kty='RSA')
                 header = {'jwk': key_jwk}
                 tokenJWT = jwt.encode(
-                    payload, privkey.chave_bytes, algorithm='RS256', headers=header).decode('utf-8')
+                    payload, privkey.chave_bytes, algorithm='RS256', headers=header)
             elif alg == 'ES256':
                 key_jwk = jwk.dumps(pubkey.chave_bytes, kty = 'EC')
                 header = {'jwk': key_jwk}
-                tokenJWT = jwt.encode(payload, privkey.chave_bytes, algorithm='ES256',headers=header).decode('utf-8')
+                tokenJWT = jwt.encode(payload, privkey.chave_bytes, algorithm='ES256',headers=header)
             elif alg == 'ES384':
                 key_jwk = jwk.dumps(pubkey.chave_bytes, kty = 'EC')
                 header = {'jwk': key_jwk}
-                tokenJWT = jwt.encode(payload, privkey.chave_bytes, algorithm='ES384',headers=header).decode('utf-8')
+                tokenJWT = jwt.encode(payload, privkey.chave_bytes, algorithm='ES384',headers=header)
             else:
                 raise Exception(
                     "Algoritmo de assinatura digital não suportado")
