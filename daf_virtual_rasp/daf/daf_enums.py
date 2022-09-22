@@ -19,6 +19,7 @@ class Respostas(Enum):
     autorizacaoRetida = 7
     versaoSBInvalida = 8
     modeloInvalido = 9
+    certificadoInvalido = 10
 
 
 class Artefatos(Enum):

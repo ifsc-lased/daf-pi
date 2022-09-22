@@ -636,6 +636,7 @@ class DAF(Layer):
             return self.__gera_json_resposta_insucesso(                  Respostas.autorizacaoRetida.value)
 
         self.atualizacao = True
+        self.operacao = True
         self.last_msg = 9
         return json.dumps({"res": 0},separators=(',', ':'))
 
@@ -663,10 +664,10 @@ class DAF(Layer):
 
 
         if not (CriptoDAF.verifica_assinatura_EC_P384(self.imagem_atual.get_assinatura_ateste(), Base64URLDAF.base64URLDecode(assinauraSef), certNovo.chave_publica)):
-             return self.__gera_json_resposta_insucesso(Respostas.assinaturaInvalida.value)
+            return self.__gera_json_resposta_insucesso(Respostas.assinaturaInvalida.value)
              
         if not (CriptoDAF.verifica_assinatura_EC_P384(certNovo.conteudo_assinado, certNovo.assinatura, certificado.chave_publica)):
-            return self.__gera_json_resposta_insucesso(Respostas.assinaturaInvalida.value)
+            return self.__gera_json_resposta_insucesso(Respostas.certificadoInvalido.value)
         
         self.ms.escrita(Artefatos.certificado, certNovo)
         self.ms.escrita(ParametrosAtualizacao.assinaturaSEF, Base64URLDAF.base64URLDecode(assinauraSef))
