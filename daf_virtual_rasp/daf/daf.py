@@ -183,7 +183,11 @@ class DAF(Layer):
                     elif cod != 13:
                         return self.__gera_json_resposta_insucesso(
                     Respostas.pedidoMalFormado.value)
-                   
+                elif self.last_msg == 9:
+                    if cod == 14:
+                         return self.__processa_cancelarProcesso()
+                    return self.__gera_json_resposta_insucesso(
+                    Respostas.pedidoMalFormado.value)
                 
             if cod == 1:
                 self.recarrega_timeout(self.timeout)
@@ -208,6 +212,7 @@ class DAF(Layer):
             elif cod == 8:
                 return self.__processa_consultarInformacoes()
             elif cod == 9:
+                self.recarrega_timeout(self.timeout)
                 return self.__processa_atualizarSB()
             elif cod == 10:
                 return self.__processa_atualizarCertificado(msg)
@@ -860,6 +865,8 @@ class DAF(Layer):
                     resposta = json.dumps(resposta,separators=(',', ':'))
                    
                     self.ms.escrita(ParametrosAtualizacao.falhasAtualizacao, 0)
+                    self.last_msg = None
+                    self.disable_timeout()
             if self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao) <= 10:
                 return resposta
             else:
