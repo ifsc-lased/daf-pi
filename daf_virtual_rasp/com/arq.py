@@ -48,7 +48,7 @@ class Arq(Layer):
             campo_dados (int, bytes): conteúdo do campo Dados
         """
         
-        # Caso tenha recebido o ACK, envia uma nova mensagem
+        # Caso tenha recebido dados da camada superior envia uma nova mensagem
         if campo_controle is None:
             if (self.seq_tx == 1):
                 campo_controle = CONTROLE_t.DATA_1.value
@@ -56,18 +56,18 @@ class Arq(Layer):
                 campo_controle = CONTROLE_t.DATA_0.value
 
             self.monta_quadro(campo_controle, campo_dados)
-            self.estado = ESTADO_t.WAIT.value
-            self.recarrega_timeout(self.tout)
             self.superior.disable_all_superior()
             print("DAF enviando:", self.msg, "\n")
             self.inferior.envia(self.msg, self.tipo)  # Envia para a subcamada inferior (Enquadramento)
+            self.tentativas = 0
+            self.recarrega_timeout(self.tout)
+            self.estado = ESTADO_t.WAIT.value
         else:
             # Recebe uma nova mensagem e envia um ACK
             if ((self.seq_rx == 1) and (campo_controle == CONTROLE_t.DATA_1.value)) or ((self.seq_rx == 0) and (campo_controle == CONTROLE_t.DATA_0.value)):
                 self.estado = ESTADO_t.IDLE.value
               
                 self.__ack(False)
-                self.disable_timeout()
                 if self.inferior.is_ping():
                     if (self.seq_tx == 1):
                         campo_controle = CONTROLE_t.DATA_1.value
@@ -83,13 +83,7 @@ class Arq(Layer):
             # Recebe uma mensagem já recebida e reenvia um ACK
             elif ((self.seq_rx == 0) and (campo_controle == CONTROLE_t.DATA_1.value)) or ((self.seq_rx == 1) and (campo_controle == CONTROLE_t.DATA_0.value)):
                 self.estado = ESTADO_t.IDLE.value
-                self.disable_timeout()
                 self.__ack(True)
-            
-            # Não reenvia ACK no estado IDLE
-            # Recebeu o ACK errado, reenvia a mensagem
-            #else:
-            #    self.__reenvia()
 
     def __wait(self, campo_controle:int, campo_dados:bytes):
         """ Estado onde é aguardado a chegada de um ACK.
@@ -109,14 +103,12 @@ class Arq(Layer):
             elif ((self.seq_rx == 1) and (campo_controle == CONTROLE_t.DATA_1.value)) or ((self.seq_rx == 0) and (campo_controle == CONTROLE_t.DATA_0.value)):
                  self.estado = ESTADO_t.WAIT.value
                  self.__ack(False)
-                 self.recarrega_timeout(self.tout)
                  print("Recebido pelo DAF:", self.campo_dados, "\n")
                  self.superior.notifica(self.comando, self.campo_dados)
 
             # Recebe uma mensagem já recebida e reenvia um ACK
             elif ((self.seq_rx == 0) and (campo_controle == CONTROLE_t.DATA_1.value)) or ((self.seq_rx == 1) and (campo_controle == CONTROLE_t.DATA_0.value)):
                 self.estado = ESTADO_t.WAIT.value
-                self.recarrega_timeout(self.tout)
                 print("Recebido pelo DAF:", self.campo_dados, "\n")
                 self.__ack(True)
 
@@ -124,9 +116,8 @@ class Arq(Layer):
             elif((self.seq_tx == 1) and (campo_controle == CONTROLE_t.ACK_0.value)) or ((self.seq_tx == 0) and (campo_controle == CONTROLE_t.ACK_1.value)):
                 if (self.tentativas == self.limite_tentativas):
                     self.tentativas = 0
-                    self.disable_timeout()
-                    self.seq_rx = not self.seq_rx
                     self.estado = ESTADO_t.IDLE.value
+                    self.disable_timeout()
                 else:
                     self.__reenvia()             
 
@@ -171,10 +162,10 @@ class Arq(Layer):
         Realiza o reenvio da mensagem em caso
         de Timeout ou de ACK incorreto
         '''
-        print("DAF enviando:", self.msg, "\n")
+        print("DAF reenviando:", self.msg, "\n")
+        self.inferior.envia(self.msg, self.tipo)
         self.tentativas += 1
         self.recarrega_timeout(self.tout)
-        self.inferior.envia(self.msg, self.tipo)
 
     def handle(self):
         pass
@@ -187,10 +178,8 @@ class Arq(Layer):
             if (self.tentativas == self.limite_tentativas):
                 self.tentativas = 0
                 self.disable_timeout()
-                self.seq_rx = not self.seq_rx
                 self.estado = ESTADO_t.IDLE.value
             else:
-                self.recarrega_timeout(self.tout)
                 self.estado = ESTADO_t.WAIT.value
                 self.__reenvia()
 
