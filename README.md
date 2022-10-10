@@ -10,20 +10,17 @@
 # DAF-pi
 
 **Sumário**
-  - [Introdução](#introdução)
-  - [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
-    - [Requisitos de hardware](#requisitos-de-hardware)
-    - [Requisitos de software](#requisitos-de-software)
-    - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
-    - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
-      - [Instalação do sistema operacional Raspberry Pi OS no cartão micro SD](#instalação-do-sistema-operacional-raspberry-pi-os-no-cartão-micro-sd)
-      - [Baixar código fonte do DAF na Raspberry PI Zero W](#baixar-código-fonte-do-daf-na-raspberry-pi-zero-w)
-      - [Configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF](#configurar-o-sistema-operacional-da-raspberry-pi-zero-w-para-que-a-mesma-atue-como-um-daf)
-  - [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
-  - [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
-  - [Limitações conhecidas](#limitações-conhecidas)
-    - [Valor do *timeout* da camada ARQ do protocolo de comunicação](#valor-do-timeout-da-camada-arq-do-protocolo-de-comunicação)
-  - [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
+
+- [Introdução](#introdução)
+- [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
+   - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
+   - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
+   - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
+- [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
+- [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
+- [Limitações conhecidas](#limitações-conhecidas)
+- [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
+
 ## Introdução
 
 Na [Especificação 2.0.1 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf) são apresentados todos os casos de uso e protocolos que devem ser implementados pelo DAF para que o mesmo possa ser comandado pelo Programa Aplicativo Fiscal (PAF) para emissão de Nota Fiscal de Consumidor Eletrônica (NFC-e) em Santa Catarina.
@@ -46,23 +43,24 @@ Este repositório apresenta uma implementação de DAF em uma [Raspberry Pi Zero
 
 ## Instalação e configuração do DAF-pi
 
-Nessa seção são apresentadas duas abordagens para ter um DAF-pi pronto para ser usado pelo PAF:
-1. A abordagem mais simples é apresentada na seção [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso), sendo essa a abordagem recomendada. 
-2. Porém, se deseja instalar manualmente o código deste repositório em uma Raspberry Pi Zero W, então siga os passos apresentados na seção [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório).
+Nessa seção são apresentadas três abordagens para ter um DAF-pi pronto para ser usado pelo PAF:
 
-Independente da abordagem que escolher, você terá que possuir os seguintes *hardwares* e *softwares*.
+1. [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
+   1. Abordagem recomendada por ser mais simples
+2. [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
+   1. Caso queira instalar manualmente o código deste repositório em uma Raspberry Pi Zero W que já esteja funcional
+3. [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
 
-### Requisitos de hardware
-
-* 01 [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/)
-* 01 Cabo micro-USB
-* 01 Cartão micro-SD com pelo menos 8GB de armazenamento
-
-### Requisitos de software
-
-- [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) para permitir instalar a imagem ISO no cartão micro-SD da Raspberry Pi Zero W
 
 ### Instalação do DAF-pi a partir de imagem ISO pronta para uso
+
+- **Requisitos de hardware**
+  * 01 [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/)
+  * 01 Cabo micro-USB
+  * 01 Cartão micro-SD com pelo menos 8GB de armazenamento
+
+- **Requisitos de software**
+  - [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) para permitir instalar a imagem ISO no cartão micro-SD da Raspberry Pi Zero W
 
 [Neste link](https://drive.google.com/file/d/1yeyuLLSZDBbCyKSWyfVX6KA965-CQakU/view?usp=sharing) é disponibilizada uma imagem ISO do DAF-pi pronta para ser colocada no cartão micro-SD da Raspberry Pi Zero W. Essa é a maneira mais simples e rápida para ter um DAF-pi pronto para uso. Os passos para obtenção e instalação dessa imagem em um cartão micro-SD são:
 
@@ -75,6 +73,14 @@ Independente da abordagem que escolher, você terá que possuir os seguintes *ha
 5. :clap:  Pronto! Você tem um DAF-pi pronto para uso.
 
 ### Instalação manual do DAF-pi a partir do código disponível nesse repositório
+
+- **Requisitos de hardware**
+  * 01 [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/)
+  * 01 Cabo micro-USB
+  * 01 Cartão micro-SD com pelo menos 8GB de armazenamento
+
+- **Requisitos de software**
+  - [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) para permitir instalar a imagem ISO no cartão micro-SD da Raspberry Pi Zero W
 
 Nessa seção são apresentados os passos para: 1) instalar o sistema operacional Raspberry Pi OS; 2) Acessar a Raspberry Pi Zero via SSH, baixar e instalar o código fonte disponível neste repositório; 3) configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF.
 #### Instalação do sistema operacional Raspberry Pi OS no cartão micro SD
@@ -121,6 +127,47 @@ sudo shutdown -r now
 ```
 :clap: Pronto! Você tem agora uma Raspberry Pi Zero W pronta para atuar como DAF.
 
+
+### Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W
+
+> Entenda que com essa abordagem a comunicação serial entre DAF e PAF não será sobre a interface USB. Ou seja, não está de acordo com a especificação de requisitos do DAF e não permitirá aos desenvolvedores de PAF terem certeza que sua implementação funcionará corretamente quando estiver comandando um DAF por meio da interface USB.
+
+Caso não tenha uma Raspberry Pi Zero W, é possível executar o [DAF-pi](https://github.com/ifsc-lased/daf-pi) em um computador com Linux e usar o aplicativo [socat](http://www.dest-unreach.org/socat) (*Multipurpose relay (SOcket CAT)*) para fazer o encaminhamento entre dois pseudoterminais. Essa abordagem permite que um PAF, que esteja sendo executado no mesmo computador, consiga acessar o DAF-pi.
+
+
+1. Instale os pacotes Python3 e socat
+    ```bash
+    sudo apt install python3 python3-venv socat
+    ```
+2. Execute o `socat` para criar um *relay* entre dois pseudoterminais (`/dev/pts`).  **Atenção:** é necessário deixar o `socat` em execução.
+    ```bash
+    socat -d -d pty,raw,echo=0 pty,raw,echo=0
+    ```
+    
+    - Após executar o código acima será impresso os pseudoterminais que foram associados. No exemplo abaixo foi criado um *relay* entre os pseudoterminais `/dev/pts/2` e `/dev/pts/3`.
+        ```bash
+        2022/06/03 15:24:55 socat[544737] N PTY is /dev/pts/2
+        2022/06/03 15:24:55 socat[544737] N PTY is /dev/pts/3
+        2022/06/03 15:24:55 socat[544737] N starting data transfer loop with FDs [5,5] and [7,7]
+        ```
+    - Um dos pseudoterminais será usado pelo DAF-pi (e.g. `/dev/pts/2`) e o outro (e.g. `/dev/pts/3`) será usado pelo PAF. 
+3. Em um outro terminal baixe o código do DAF-pi e baixe as dependências do projeto
+    ```bash
+    git clone https://github.com/ifsc-lased/daf-pi.git
+    cd daf-pi
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    ```
+4. Edite o arquivo [`app.py`](https://github.com/ifsc-lased/daf-pi/blob/bb25e7e9233667f11d449bee811db8cb671fc096/app.py#L17) e substitua o valor `/dev/ttyGS0` que está associado ao [atributo `port`](https://github.com/ifsc-lased/daf-pi/blob/f7fecd4ed449dc3e07d3ad96e382767a2d2940ec/app.py#L17) por um dos pseudoterminais que o socat está usando. Neste exemplo será usado `/dev/pts/2`.
+5. Execute a aplicação DAF-pi
+    ```bash
+    python3 app.py
+    ```
+6. :clap: Pronto! Você tem agora o DAF-pi sendo executado no seu computador com Linux. 
+   - Caso queira testar este DAF, use a [composição PAF SEF](https://github.com/ifsc-lased/composicao-paf-sef), mas lembre-se que é necessário alterar o valor associado [variável `port` no código do PAF](https://github.com/ifsc-lased/composicao-paf-sef/blob/c0ca54e4f7d6f9aaecf22957351d339f8a068426/paf/app/app/daf/com/pdafcdc.py#L101) para o pseudoterminal que o socat associou.
+      - Exemplo: `port=/dev/pts/3`.    
 
 ## Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF
 
