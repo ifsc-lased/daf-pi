@@ -106,7 +106,7 @@ class DAF(Layer):
                 else:
                     return False
 
-            elif cod == 3 or cod == 8 or cod == 9 or cod == 14:
+            elif cod == 3 or cod == 8 or cod == 9 or cod == 14 or cod == 15:
                 return True
 
             elif cod == 4:
@@ -136,7 +136,13 @@ class DAF(Layer):
                     return True
                 else:
                     return False
-
+            
+            elif cod == 16:
+                chaves = ['ini', 'fim']
+                if (self.__verifica_chaves_mensagem(msg, chaves, 3)):
+                    return True
+                else:
+                    return False           
             else:
                 pass
         else:
@@ -188,7 +194,7 @@ class DAF(Layer):
                          return self.__processa_cancelarProcesso()
                     return self.__gera_json_resposta_insucesso(
                     Respostas.pedidoMalFormado.value)
-                
+           
             if cod == 1:
                 self.recarrega_timeout(self.timeout)
                 return self.__processa_registrar(msg)
@@ -226,6 +232,10 @@ class DAF(Layer):
                 return self.__processa_confirmarAlterarModoOperacao(msg)
             elif cod == 14:
                 return self.__processa_cancelarProcesso()
+            elif cod == 15:
+                return self.__processa_obterImpressaoDigital(msg)
+            elif cod == 16:
+                return self.__processa_consultarAutorizacoes(msg)
             elif cod == 9997:
                 return self.__novo_iddaf()
             elif cod == 9998:
@@ -295,6 +305,8 @@ class DAF(Layer):
         payload_resposta['cnt'] = self.ms.leitura(
             Artefatos.contador)
         payload_resposta['nnc'] = payload['nnc']
+        payload_resposta['vsb'] = self.ms.leitura(
+            ParametrosAtualizacao.versaoSB)
 
         token_int = JWTDAF.geraJWT(payload_resposta, 'ES256', self.ms.leitura(Artefatos.chavePrivada), self.ms.leitura(Artefatos.chavePublica))
 
@@ -374,7 +386,6 @@ class DAF(Layer):
         self.operacao = True
         return json.dumps({'res': 0, "nnc": self.nonce},separators=(',', ':'))
         
-
     def __processa_autorizarDFE(self, msg: str) -> str:
         """ Método interno para processar o pedido final de autorização do DAF 
 
@@ -597,6 +608,8 @@ class DAF(Layer):
         if not self.ms.leitura(Guardas.Estado) == Estados.inativo.value and not self.ms.leitura(Guardas.Estado) == Estados.pronto.value and not self.ms.leitura(Guardas.Estado) == Estados.bloqueado.value:
             return self.__gera_json_resposta_insucesso(Respostas.estadoIncorreto.value)
 
+        certificado = Certificado(self.ms.leitura(Artefatos.certificado).certificado_str) 
+
         res = {}
         res['res'] = 0
         res['daf'] = self.ms.leitura(Artefatos.IDDAF)
@@ -605,24 +618,16 @@ class DAF(Layer):
         res['sig'] = self.ms.leitura(ParametrosAtualizacao.assinaturaSEF)
         res['fab'] = self.ms.leitura(ParametrosAtualizacao.cnpj)
         res['mdl'] = self.ms.leitura(ParametrosAtualizacao.modelo)
-        res['cnt'] = self.ms.leitura(Artefatos.contador)
-        res['crt'] = self.ms.leitura(Artefatos.certificado).certificado_str
+        res['cnt'] = self.ms.leitura(Artefatos.contador)     
+        res['cfp'] = Base64URLDAF.base64URLEncode(certificado.fingerprint_SHA256)
         res['est'] = self.ms.leitura(Guardas.Estado)
         res["mxd"] = min(self.ms.leitura(Guardas.MaxDFe),self.ms.leitura(Guardas.MaxDFeModel))
         res["ndf"] = self.ms.leitura(Guardas.NumDFe)
-
-        autorizacoes = self.mt.get_autorizacoes_DFE()
-        vetorIdAut = []
-        for autorizacao in autorizacoes:
-            vetorIdAut.append(autorizacao['aut'])
-
-        res['rts'] = vetorIdAut
 
         self.last_msg = 8
 
         return json.dumps(res,separators=(',', ':'))
       
-
     def __processa_atualizarSB(self) -> str:
         """Método interno para processar o pedido de atualização de SB do DAF 
 
@@ -649,26 +654,24 @@ class DAF(Layer):
         Returns:
             str: Resposta do DAF ao pedido
         """
-        if not self.ms.leitura(Guardas.Estado) == Estados.inativo.value:
+        estado_atual = self.ms.leitura(Guardas.Estado)
+        if estado_atual not in [Estados.inativo.value, Estados.pronto.value, Estados.bloqueado.value]:
             return self.__gera_json_resposta_insucesso(                Respostas.estadoIncorreto.value)
         
         if not self.__valida_mensagem(msg):
             return self.__gera_json_resposta_insucesso(Respostas.pedidoMalFormado.value)
-        
-        if not self.ms.leitura(Guardas.NumDFe) == 0:
-            return self.__gera_json_resposta_insucesso(                 Respostas.autorizacaoRetida.value)
 
         certificado = self.ms.leitura(Artefatos.certificado)
         certNovo = Certificado(msg['crt'])
         assinauraSef = msg['sig']
 
 
-        if not (CriptoDAF.verifica_assinatura_EC_P384(self.imagem_atual.get_assinatura_ateste(), Base64URLDAF.base64URLDecode(assinauraSef), certNovo.chave_publica)):
-            return self.__gera_json_resposta_insucesso(Respostas.assinaturaInvalida.value)
-             
         if not (CriptoDAF.verifica_assinatura_EC_P384(certNovo.conteudo_assinado, certNovo.assinatura, certificado.chave_publica)):
             return self.__gera_json_resposta_insucesso(Respostas.certificadoInvalido.value)
-        
+
+        if not (CriptoDAF.verifica_assinatura_EC_P384(self.imagem_atual.get_assinatura_ateste(), Base64URLDAF.base64URLDecode(assinauraSef), certNovo.chave_publica)):
+            return self.__gera_json_resposta_insucesso(Respostas.assinaturaFirmwareInvalida.value)
+             
         self.ms.escrita(Artefatos.certificado, certNovo)
         self.ms.escrita(ParametrosAtualizacao.assinaturaSEF, Base64URLDAF.base64URLDecode(assinauraSef))
 
@@ -805,6 +808,69 @@ class DAF(Layer):
         self.disable_timeout()
     
         return json.dumps({"res": 0},separators=(',', ':'))
+    
+    def __processa_obterImpressaoDigital(self, msg:str) -> str:
+        """Método interno para processar o pedido de obter a impressão digital do certificado digital da SEF
+
+        Returns:
+            str: Resposta do DAF ao pedido
+        """
+        if not self.ms.leitura(Guardas.Estado) == Estados.pronto.value and not self.ms.leitura(Guardas.Estado) == Estados.bloqueado.value:
+          return self.__gera_json_resposta_insucesso(Respostas.estadoIncorreto.value)
+
+        if not self.__valida_mensagem(msg):
+            return self.__gera_json_resposta_insucesso(Respostas.pedidoMalFormado.value)
+        
+        payload = {} 
+        certificado = Certificado(self.ms.leitura(Artefatos.certificado).certificado_str) 
+        
+        payload['daf'] = self.ms.leitura(
+            Artefatos.IDDAF)
+        payload['cfp'] = Base64URLDAF.base64URLEncode(certificado.fingerprint_SHA256)
+        chSEF = self.ms.leitura(Artefatos.chaveSEF)
+        
+        token = JWTDAF.geraJWT(payload, 'HS256', chSEF)
+        
+        self.last_msg = 15
+        self.operacao = False
+        return json.dumps({'res': 0, 'jwt': token},separators=(',', ':'))
+    
+    def __processa_consultarAutorizacoes(self, msg:str) -> str:
+        """Método interno para processar o pedido de consultar autorizações do DAF
+         
+        Args:
+            msg (str): Mensagem JSON recebida pelo DAF
+            
+        Returns:
+            str: Resposta do DAF ao pedido
+        """
+        if not self.ms.leitura(Guardas.Estado) == Estados.pronto.value and not self.ms.leitura(Guardas.Estado) == Estados.bloqueado.value:
+          return self.__gera_json_resposta_insucesso(Respostas.estadoIncorreto.value)
+
+        if not self.__valida_mensagem(msg):
+            return self.__gera_json_resposta_insucesso(Respostas.pedidoMalFormado.value)
+ 
+        if not msg['ini'] > 0:
+            return self.__gera_json_resposta_insucesso(Respostas.pedidoMalFormado.value)      
+        
+        if not msg['ini'] <= msg['fim']:
+            return self.__gera_json_resposta_insucesso(Respostas.pedidoMalFormado.value) 
+        
+        if not msg['fim'] <= self.ms.leitura(Guardas.NumDFe):
+            return self.__gera_json_resposta_insucesso(Respostas.pedidoMalFormado.value) 
+        
+        res = {}
+        autorizacoes = self.mt.get_autorizacoes_DFE()
+        vetorIdAut = []
+                
+        for autorizacao in autorizacoes[msg['ini']-1:msg['fim']]:
+            vetorIdAut.append(autorizacao['aut'])
+
+        res['res'] = 0
+        res['rts'] = vetorIdAut
+        self.operacao = False
+        self.last_msg = 16
+        return json.dumps(res,separators=(',', ':'))
 
     def __gera_json_resposta_insucesso(self, res: int) -> str:
         """ Método interno para geração de respostas de insucesso do DAF
@@ -895,20 +961,24 @@ class DAF(Layer):
         """
         self.ms.escrita(Guardas.Violado, True)
         self.ms.escrita(Guardas.Estado, Estados.inutilizado.value)
-        
+
+        # Retorna as informações com exceção de:
+        # - Conteúdo da partição do SB
+        # - Conteúdo da MT
         MaxDFeModel = self.ms.leitura(Guardas.MaxDFeModel)
         maxDFe = self.ms.leitura(Guardas.MaxDFe)
         regOK = self.ms.leitura(Guardas.REGOK)
+        numDfe = self.ms.leitura(Guardas.NumDFe)
         contador = self.ms.leitura(Artefatos.contador)
         iddaf = self.ms.leitura(Artefatos.IDDAF)
         mop = self.ms.leitura(Artefatos.modoOperacao)
         resumo = self.ms.leitura(ParametrosAtualizacao.assinaturaSEF)
         versao = self.ms.leitura(ParametrosAtualizacao.versaoSB)
-        numAtualizacoes = bytes([self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao)])
-        cnpj = self.ms.leitura(ParametrosAtualizacao.cnpj).encode('utf-8').hex()
-        modelo = self.ms.leitura(ParametrosAtualizacao.modelo).encode('utf-8').hex()
+        numAtualizacoes = self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao)
+        cnpj = self.ms.leitura(ParametrosAtualizacao.cnpj)
+        modelo = self.ms.leitura(ParametrosAtualizacao.modelo)
 
-        data = MaxDFeModel.to_bytes(2,byteorder='big').hex() + '|' + maxDFe.to_bytes(2,byteorder='big').hex() + '|' + bytes([regOK]).hex() + '|' + contador.to_bytes(2,byteorder='big').hex() + '|' + iddaf.encode('utf-8').hex() + '|' + bytes([mop]).hex() + '|' + resumo.hex() + '|' + versao.to_bytes(2,byteorder='big').hex() + '|' + numAtualizacoes.hex() + '|' + cnpj + '|' + modelo
+        data = str(MaxDFeModel) + '|' + str(maxDFe) + '|' + str(int(regOK)) + str(numDfe) + '|' + str(contador) + '|' + iddaf.encode('utf-8').hex() + '|' + str(mop) + '|' + resumo.encode('utf-8').hex() + '|' + str(versao) + '|' + str(numAtualizacoes) + '|' + cnpj + '|' + modelo
 
         return data
 

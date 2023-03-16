@@ -44,6 +44,8 @@ class Certificado():
             serialization.Encoding.PEM)
         self.conteudo_assinado = certificado_x509.tbs_certificate_bytes
 
+        self.fingerprint_SHA256 = certificado_x509.fingerprint(hashes.SHA256())
+
 
 class CriptoDAF:
     ''' 

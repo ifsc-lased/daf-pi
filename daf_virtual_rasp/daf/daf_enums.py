@@ -5,7 +5,7 @@ class Estados(Enum):
     inativo = "INATIVO"
     pronto = "PRONTO"
     bloqueado = "BLOQUEADO"
-    inutilizado = "INTUZILIZADO"
+    inutilizado = "INUTILIZADO"
 
 
 class Respostas(Enum):
@@ -20,6 +20,9 @@ class Respostas(Enum):
     versaoSBInvalida = 8
     modeloInvalido = 9
     certificadoInvalido = 10
+    erroInesperado = 11
+    assinaturaFirmwareInvalida = 12
+
 
 
 class Artefatos(Enum):

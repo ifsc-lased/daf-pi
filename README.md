@@ -2,12 +2,12 @@
 > # Aviso de isenção de responsabilidade
 >A presente prova de conceito (POC) é um artefato fruto do Contrato de Encomenda Tecnológica nº 001/2020, firmado entre a Secretaria de Estado da Fazenda de Santa Catarina e o Instituto Federal de Santa Catarina - IFSC.
 >
->O objetivo desta prova de conceito é restrito aos objetivos contratados entre a SEF e o IFSC, compatível apenas com a versão 2.0.1 da especificação técnica de requisitos do DAF. Este artefato não tem como objetivo implementar completamente todos os processos de negócio previstos na especificação, visto que seu intuito foi demonstrar a viabilidade de implementação, tanto do DAF quanto da integração entre o PAF, DAF e a SEF-SC, utilizando tecnologias amplamente adotadas pelo mercado de desenvolvimento de software.
+>O objetivo desta prova de conceito é restrito aos objetivos contratados entre a SEF e o IFSC, compatível apenas com a versão 3.0.0 da especificação técnica de requisitos do DAF. Este artefato não tem como objetivo implementar completamente todos os processos de negócio previstos na especificação, visto que seu intuito foi demonstrar a viabilidade de implementação, tanto do DAF quanto da integração entre o PAF, DAF e a SEF-SC, utilizando tecnologias amplamente adotadas pelo mercado de desenvolvimento de software.
 >
 >Não cabe à SEF ou ao IFSC prestar suporte sobre os componentes, códigos ou excertos de código disponíveis nesta POC, sendo a presente versão considerada final, sem previsão de alterações, correção de bugs ou melhorias.
 >
 >A SEF e o IFSC eximem-se de qualquer responsabilidade, direta ou indireta, por perdas ou danos, comprovadamente ou alegadamente, causados pelos artefatos disponibilizados nesta POC. Caso deseje usar os componentes e softwares aqui disponibilizados, você estará fazendo isto exclusivamente por sua conta e risco.
-# DAF-pi
+# DAF-pi 
 
 **Sumário**
 
@@ -23,21 +23,21 @@
 
 ## Introdução
 
-Na [Especificação 2.0.1 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf) são apresentados todos os casos de uso e protocolos que devem ser implementados pelo DAF para que o mesmo possa ser comandado pelo Programa Aplicativo Fiscal (PAF) para emissão de Nota Fiscal de Consumidor Eletrônica (NFC-e) em Santa Catarina.
+Na [Especificação 3.0.0 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf) são apresentados todos os casos de uso e protocolos que devem ser implementados pelo DAF para que o mesmo possa ser comandado pelo Programa Aplicativo Fiscal (PAF) para emissão de Nota Fiscal de Consumidor Eletrônica (NFC-e) em Santa Catarina.
 
 Este repositório apresenta uma implementação de DAF em uma [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/) e tem como público alvo desenvolvedores de PAF, uma vez que esses precisarão ter um DAF para validar suas implementações. O DAF-pi faz parte do *kit* de desenvolvimento oferecido aos desenvolvedores de PAF e fabricantes de DAF. Na figura abaixo são apresentadas todas as entidades que fazem parte do *kit* de desenvolvimento.
 
 ![alt text](res/cenario.png "Entidades do projeto DAF")
 
 1. **DAF-pi** (este repositório)
-   - Implementação em Python3 de todos os casos de uso da [Especificação 2.0.1 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf) para ser executada exclusivamente em uma [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/). O DAF-pi só pode ser usado como ferramenta de apoio para desenvolvimento do PAF, uma vez que a Raspberry Pi não atende os requisitos de segurança da especificação do DAF.
+   - Implementação em Python3 de todos os casos de uso da [Especificação 3.0.0 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf) para ser executada exclusivamente em uma [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/). O DAF-pi só pode ser usado como ferramenta de apoio para desenvolvimento do PAF, uma vez que a Raspberry Pi não atende os requisitos de segurança da especificação do DAF.
      - O **DAF-pi** foi desenvolvido considerando que seria mais fácil para o desenvolvedor de PAF adquirir no mercado uma Raspberry Pi Zero W. Contudo, também foi feita uma prova de conceito de DAF, denominada [DAF-poc](https://github.com/ifsc-lased/daf-poc), em um *hardware* com o microcontrolador MAX 32552 da Maxim. O código fonte desta prova de conceito pode ser obtido [neste repositório](https://github.com/ifsc-lased/daf-poc).
 2. [**PAF** ](https://github.com/ifsc-lased/composicao-paf-sef)
    - O PAF do *kit* de desenvolvimento só implementa as rotinas cruciais para interação com o DAF, SEFAZ autorizadora e SEF. Trata-se assim de uma ferramenta de apoio que poderá ser usada por desenvolvedores de PAF e fabricantes de DAF.
 3. [**SEFAZ Autorizadora**](https://github.com/ifsc-lased/composicao-paf-sef) 
    - A SEFAZ Autorizadora no *kit* de desenvolvimento tem como foco somente o caso de uso para autorização de uso de DF-e. A implementação consiste de uma simples rotina de persistência do DF-e autorizado para uso no banco de dados relacional usado pelo PAF. Sendo assim, não consiste de uma implementação real da SEFAZ autorizadora.
 4. [**Secretaria de Estado da Fazenda de Santa Catarina (SEF)**](https://github.com/ifsc-lased/sef-ws) 
-   - A SEF no *kit* de desenvolvimento provê implementação para os todos os casos de uso que envolvam diretamente o contribuinte e seu DAF, conforme apresentado na [Especificação 2.0.1 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf). Por exemplo, registro de DAF, remoção de registro, autorização para remoção de autorização retida no DAF, entre outras.
+   - A SEF no *kit* de desenvolvimento provê implementação para todos os casos de uso que envolvam diretamente o contribuinte e seu DAF, conforme apresentado na [Especificação 3.0.0 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf). Por exemplo, registro de DAF, remoção de registro, autorização para remoção de autorização retida no DAF, entre outras.
 
 > Disponibilizamos [aqui uma composição Docker](https://github.com/ifsc-lased/composicao-paf-sef) que permite facilmente montar um ambiente local de desenvolvimento composto pelas entidades PAF, SEFAZ autorizadora e SEF, apresentadas acima. 
 
@@ -62,9 +62,9 @@ Nessa seção são apresentadas três abordagens para ter um DAF-pi pronto para 
 - **Requisitos de software**
   - [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) para permitir instalar a imagem ISO no cartão micro-SD da Raspberry Pi Zero W
 
-[Neste link](https://drive.google.com/file/d/1yeyuLLSZDBbCyKSWyfVX6KA965-CQakU/view?usp=sharing) é disponibilizada uma imagem ISO do DAF-pi pronta para ser colocada no cartão micro-SD da Raspberry Pi Zero W. Essa é a maneira mais simples e rápida para ter um DAF-pi pronto para uso. Os passos para obtenção e instalação dessa imagem em um cartão micro-SD são:
+[Neste link](https://drive.google.com/file/d/1oAU-cxtn7BGS4QaQZDBVo8TvWamJwxKX/view?usp=share_link) é disponibilizada uma imagem ISO do DAF-pi pronta para ser colocada no cartão micro-SD da Raspberry Pi Zero W. Essa é a maneira mais simples e rápida para ter um DAF-pi pronto para uso. Os passos para obtenção e instalação dessa imagem em um cartão micro-SD são:
 
-1. Obter a imagem do DAF-pi disponibilizada [neste link](https://drive.google.com/file/d/1yeyuLLSZDBbCyKSWyfVX6KA965-CQakU/view?usp=sharing)
+1. Obter a imagem do DAF-pi disponibilizada [neste link](https://drive.google.com/file/d/1oAU-cxtn7BGS4QaQZDBVo8TvWamJwxKX/view?usp=share_link)
 2. Seguir os passos [desse vídeo](https://www.youtube.com/watch?v=ntaXWS8Lk34&ab_channel=RaspberryPi) para instalação do sistema operacional e configuração de rede da placa
 3. Selecionar a imagem do DAF-pi recém obtida
    1. Habilitar acesso via SSH e definir uma senha de acesso para o usuário `pi`
@@ -166,12 +166,12 @@ Caso não tenha uma Raspberry Pi Zero W, é possível executar o [DAF-pi](https:
     python3 app.py
     ```
 6. :clap: Pronto! Você tem agora o DAF-pi sendo executado no seu computador com Linux. 
-   - Caso queira testar este DAF, use a [composição PAF SEF](https://github.com/ifsc-lased/composicao-paf-sef), mas lembre-se que é necessário alterar o valor associado [variável `port` no código do PAF](https://github.com/ifsc-lased/composicao-paf-sef/blob/c0ca54e4f7d6f9aaecf22957351d339f8a068426/paf/app/app/daf/com/pdafcdc.py#L101) para o pseudoterminal que o socat associou.
-      - Exemplo: `port=/dev/pts/3`.    
+   - Caso queira testar este DAF, use a [composição PAF SEF](https://github.com/ifsc-lased/composicao-paf-sef), mas lembre-se que é necessário definir o valor da [variável `porta` no código do PAF](https://github.com/ifsc-lased/composicao-paf-sef/blob/c0ca54e4f7d6f9aaecf22957351d339f8a068426/paf/app/app/daf/com/pdafcdc.py#L96) (antes do if) para o pseudoterminal que o socat associou.
+      - Exemplo: `porta='pts/3'`.     
 
 ## Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF
 
-Nessa seção são apresentadas comandos específicos que o DAF-pi implementa para gerar facilidades para o desenvolvimento do PAF. Todos os comandos aqui apresentados não estão de acordo com a [Especificação 2.0.1 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf).
+Nessa seção são apresentadas comandos específicos que o DAF-pi implementa para gerar facilidades para o desenvolvimento do PAF. Todos os comandos aqui apresentados não estão de acordo com a [Especificação 3.0.0 do Dispositivo Autorizador Fiscal (DAF)](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf).
 
 O DAF-pi pode a qualquer momento ser colocado no modo `padrão de fábrica`, estado no qual o dispositivo se comporta como um DAF recém adquirido. O [PAF](https://github.com/ifsc-lased/composicao-paf-sef) disponível no *kit* de desenvolvimento possui a funcionalidade para colocar o DAF-pi no modo `padrão de fábrica`. Ao ser invocada, o PAF envia a mensagem com o código `9999` ao DAF-pi.
 
@@ -185,13 +185,13 @@ O [PAF](https://github.com/ifsc-lased/composicao-paf-sef) disponível no *kit* d
 
 De acordo com a especificação do DAF, o DAF pode ir para o estado inutilizado se acontecer alguma ação não permitida, como uma tentativa de revelação do material criptográfico mantido em sua memória segura. 
 
-O [PAF](https://github.com/ifsc-lased/composicao-paf-sef) disponível no *kit* de desenvolvimento possui a funcionalidade para colocar o DAF-pi no estado inutilizado. o ser invocada, o PAF envia a mensagem com o código `9998` ao DAF. 
+O [PAF](https://github.com/ifsc-lased/composicao-paf-sef) disponível no *kit* de desenvolvimento possui a funcionalidade para colocar o DAF-pi no estado inutilizado. Ao ser invocada, o PAF envia a mensagem com o código `9998` ao DAF. 
 
-> O DAF-pi, quando no estado de inutilizado, não transmitirá suas informações a cada 30 segundos, como descrito na especificação de requisitos do DAF. No caso, transmitirá essas informações sempre que receber uma mensagem do PAF que seja diferente da mensagem que o levaria para o modo `padrão de fábrica`.
+> O DAF-pi, quando no estado de inutilizado, não transmitirá suas informações a cada 30 segundos, como descrito na especificação de requisitos do DAF. No caso, transmitirá essas informações (com exceção do conteúdo da partição do SB e da MT) sempre que receber uma mensagem do PAF que seja diferente da mensagem que o levaria para o modo `padrão de fábrica`.
 
 ## Certificado da SEF e chave de ateste com o DAF-pi
 
-De acordo com a [Especificação Técnica de Requisitos do DAF](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf), o DAF deverá conter o certificado digital da SEF. Por outro lado, a SEF já deverá ter a chave pública, par da chave de ateste do DAF.
+De acordo com a [Especificação Técnica de Requisitos do DAF](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf), o DAF deverá conter o certificado digital da SEF. Por outro lado, a SEF já deverá ter a chave pública, par da chave de ateste do DAF.
 
 A [SEF](https://github.com/ifsc-lased/sef-ws) deste kit de desenvolvimento contém a chave pública, par da [chave de ateste do DAF-pi](daf_virtual_rasp/resources/ateste-priv-ec.pem). E o DAF-pi contém o [certificado da SEF](daf_virtual_rasp/resources/sef-cert-ec.pem). Esse certificado digital da SEF é auto assinado e tem validade até `2031-05-27 14:35:18`.
 
@@ -203,7 +203,7 @@ Desenvolvedores de DAF, que forem usar o kit de desenvolvimento disponibilizado,
 
 ### Valor do *timeout* da camada ARQ do protocolo de comunicação
 
-Em função da placa Raspberry Pi Zero W não possuir um acelerador criptográfico, algumas operações podem demorar mais tempo que o valor de *timeout* da camada ARQ do protocolo de comunicação definido na [Especificação Técnica de Requisitos do DAF](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/DAF_Especificacao_de_Requisitos_2.0.1.pdf.pdf). 
+Em função da placa Raspberry Pi Zero W não possuir um acelerador criptográfico, algumas operações podem demorar mais tempo que o valor de *timeout* da camada ARQ do protocolo de comunicação definido na [Especificação Técnica de Requisitos do DAF](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf). 
 
 Desta forma, na implementação do DAF-pi o valor do *timeout* da camada ARQ é de **2 segundos**. O PAF que for interagir com este DAF-pi deve definir o mesmo valor para o *timeout* da camada ARQ de sua implementação do protocolo de comunicação do DAF. 
 
