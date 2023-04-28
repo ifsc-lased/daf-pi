@@ -3,6 +3,7 @@ from daf_virtual_rasp.utils.cripto_daf import CriptoDAF, Certificado, ChaveCript
 from tinydb import TinyDB, Query
 from typing import Union
 import os
+import shutil
 import json
 from daf_virtual_rasp.imagem import ImagemSB
 from daf_virtual_rasp.utils.base64URL_daf import Base64URLDAF
@@ -120,6 +121,10 @@ class MemoriaSegura:
         
         modelo = 'daf-pi'
 
+        src = './daf_virtual_rasp/resources/default-imagem/sb'
+        dst = './daf_virtual_rasp/resources/imagem/sb'
+        shutil.rmtree(dst)
+        shutil.copytree(src, dst, dirs_exist_ok=True)
 
         imagem = ImagemSB(path_arquivos='./daf_virtual_rasp/resources/imagem/sb')
         

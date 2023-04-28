@@ -4,15 +4,27 @@ from daf_virtual_rasp.utils.cripto_daf import ChaveCripto, CriptoDAF
 from daf_virtual_rasp.daf.daf_enums import Artefatos
 from daf_virtual_rasp.utils.base64URL_daf import Base64URLDAF
 
-class ImagemSB:
+### ATENÇÃO ###
+
+# Este código serve somente para ilustrar uma maneira de validar o binário contendo a imagem recebida
+# Cada fabricante é resposável por montar e validar a imagem de acordo com a especificação do DAF vigente.
+
+
+#### Composição da imagem para o daf-pi ####
+
+# Firmware = VSB + MXD_SEF + SB (codigo)
+# Imagem = Firmware + tamanho_assinatura_ateste + assinatura_ateste + tamanho_assinatura_sef + assinatura (SEF)
+class ImagemSB: 
 
     # todos tamanhos em bytes
     VERSAO_TAMANHO = 2
     MAXDFE_TAMANHO = 2
-    HASH_TAMANHO = 32  # 256 bits
-    ASSINATURA_TAMANHO = 103 #102
-    ASSINATURA_ATESTE_TAMANHO = 103 #103
-    CODIGO_TAMANHO = 2048 
+    CODIGO_TAMANHO = 2048
+    FIRMWARE_TAMANHO = VERSAO_TAMANHO + MAXDFE_TAMANHO + CODIGO_TAMANHO
+    # qtd de bytes que indicam o tamanho das assinaturas
+    TAMANHO_ASSINATURA_ATESTE = 2
+    TAMANHO_ASSINATURA = 2
+     
 
     def __init__(self, raw_binario: bytes = b'', path_arquivos: str = './daf_virtual_rasp/resources/imagem/sb'):
         """Inicialização da imagem do SB.
@@ -36,7 +48,7 @@ class ImagemSB:
             
             if self.particao_vazia() == True:
                 raise ValueError(
-                    "Partição está vázia e parâmetro raw_binario está vázio.")
+                    "Partição está vazia e parâmetro raw_binario está vázio.")
 
         else:
             # imagem sendo adicionada agora
@@ -44,17 +56,26 @@ class ImagemSB:
             versao = self._extrai_versao(raw_binario)
             print("Versão recebida: " ,int.from_bytes(versao,byteorder='big'), "\n")
             maxdfe = self._extrai_maxdfe(raw_binario)
-            hash = self._extrai_hash(raw_binario)
-            assinatura = self._extrai_assinatura(raw_binario)
-            assinatura_ateste = self._extrai_assinatura_ateste(raw_binario)
-            codigo = self._extrai_codigo(raw_binario)
+            codigo = self._extrai_codigo(raw_binario) # SB
+            firmware = versao + maxdfe + codigo
 
+            tamanho_assinatura_ateste = self._extrai_tam_assinatura_ateste(raw_binario)
+            self._tam_assinatura_ateste = int.from_bytes(tamanho_assinatura_ateste, byteorder='big')
+            assinatura_ateste = self._extrai_assinatura_ateste(raw_binario)
+            
+            tamanho_assinatura_sef = self._extrai_tam_assinatura_sef(raw_binario) 
+            self._tam_assinatura_sef = int.from_bytes(tamanho_assinatura_sef, byteorder='big')
+            assinatura = self._extrai_assinatura(raw_binario)
+                       
             self._set_versao(versao)
             self._set_maxdfe(maxdfe)
-            self._set_hash(hash)
-            self._set_assinatura(assinatura)
-            self._set_assinatura_ateste(assinatura_ateste)
             self._set_codigo(codigo)
+            self._set_firmware(firmware)
+            self._set_tam_assinatura_ateste(tamanho_assinatura_ateste)
+            self._set_assinatura_ateste(assinatura_ateste)
+            self._set_tam_assinatura_sef(tamanho_assinatura_sef)
+            self._set_assinatura(assinatura)
+            
 
     # extração de campos da imagem cru
 
@@ -65,22 +86,26 @@ class ImagemSB:
     def _extrai_maxdfe(self, raw_binario: bytes) -> bytes:
         offset = self.VERSAO_TAMANHO
         return raw_binario[offset: offset + self.MAXDFE_TAMANHO]
-
-    def _extrai_hash(self, raw_binario: bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO
-        return raw_binario[offset: offset + self.HASH_TAMANHO]
-
-    def _extrai_assinatura(self, raw_binario: bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO + self.HASH_TAMANHO 
-        return raw_binario[offset: offset + self.ASSINATURA_TAMANHO]
+    
+    def _extrai_codigo(self, raw_binario: bytes) -> bytes:
+        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO 
+        return raw_binario[offset: offset + self.CODIGO_TAMANHO]
+    
+    def _extrai_tam_assinatura_ateste(self, raw_binario: bytes) -> bytes:
+        offset = self.FIRMWARE_TAMANHO
+        return raw_binario[offset: offset + self.TAMANHO_ASSINATURA_ATESTE]
 
     def _extrai_assinatura_ateste(self, raw_binario: bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO + self.HASH_TAMANHO + self.ASSINATURA_TAMANHO 
-        return raw_binario[offset: offset + self.ASSINATURA_ATESTE_TAMANHO]
-
-    def _extrai_codigo(self, raw_binario: bytes) -> bytes:
-        offset = self.VERSAO_TAMANHO + self.MAXDFE_TAMANHO + self.HASH_TAMANHO + self.ASSINATURA_TAMANHO + self.ASSINATURA_ATESTE_TAMANHO 
-        return raw_binario[offset:]
+        offset = self.FIRMWARE_TAMANHO + self.TAMANHO_ASSINATURA_ATESTE
+        return raw_binario[offset: offset + self._tam_assinatura_ateste]
+    
+    def _extrai_tam_assinatura_sef(self, raw_binario: bytes) -> bytes:
+        offset = self.FIRMWARE_TAMANHO + self.TAMANHO_ASSINATURA_ATESTE + self._tam_assinatura_ateste
+        return raw_binario[offset: offset + self.TAMANHO_ASSINATURA]
+    
+    def _extrai_assinatura(self, raw_binario: bytes) -> bytes:
+        offset = self.FIRMWARE_TAMANHO + self.TAMANHO_ASSINATURA_ATESTE + self._tam_assinatura_ateste + self.TAMANHO_ASSINATURA
+        return raw_binario[offset: offset + self._tam_assinatura_sef]
 
     # get/set versao
 
@@ -108,21 +133,79 @@ class ImagemSB:
     def get_maxdfe(self) -> bytes:
         with open(self._arquivo_maxdfe(), "rb") as arquivo:
             maxdfe = arquivo.read()
-        return maxdfe        
+        return maxdfe  
 
-    # get/set hash
+     # get/set codigo
 
-    def _arquivo_hash(self) -> str:
-        return f"{self.path_arquivos}/hash.bin"
+    def _arquivo_codigo(self) -> str:
+        return f"{self.path_arquivos}/codigo.bin"
 
-    def _set_hash(self, hash: bytes) -> None:
-        with open(self._arquivo_hash(), "wb") as arquivo:
-            arquivo.write(hash)
+    def _set_codigo(self, codigo: bytes) -> None:
+        with open(self._arquivo_codigo(), "wb") as arquivo:
+            arquivo.write(codigo)
 
-    def get_hash_SB(self) -> bytes:
-        with open(self._arquivo_hash(), "rb") as arquivo:
-            hash = arquivo.read()
-        return hash
+    def get_codigo(self) -> bytes:
+        
+        with open(self._arquivo_codigo(), "rb") as arquivo:
+            codigo = arquivo.read()
+        
+        return codigo      
+
+    # get/set firmware
+
+    def _arquivo_firmware(self) -> str:
+        return f"{self.path_arquivos}/firmware.bin"
+
+    def _set_firmware(self, firmware: bytes) -> None:
+        with open(self._arquivo_firmware(), "wb") as arquivo:
+            arquivo.write(firmware)
+
+    def get_firmware(self) -> bytes:
+        with open(self._arquivo_firmware(), "rb") as arquivo:
+            firmware = arquivo.read()
+        return firmware
+
+    # get/set tam_assinatura_ateste
+
+    def _arquivo_tam_assinatura_ateste(self) -> str:
+        return f"{self.path_arquivos}/tam_assinatura_ateste.str"
+
+    def _set_tam_assinatura_ateste(self, tam_assinatura_ateste: bytes) -> None:
+        with open(self._arquivo_tam_assinatura_ateste(), "wb") as arquivo:
+            arquivo.write(tam_assinatura_ateste)
+
+    def get_tam_assinatura_ateste(self) -> bytes:
+        with open(self._arquivo_tam_assinatura_ateste(), "rb") as arquivo:
+            tam_assinatura_ateste = arquivo.read()
+        return tam_assinatura_ateste
+
+    # get/set assinatura_ateste
+
+    def _arquivo_assinatura_ateste(self)-> str:
+        return f"{self.path_arquivos}/assinatura_ateste.bin"
+
+    def _set_assinatura_ateste(self, assinatura_ateste: bytes)-> None:
+        with open(self._arquivo_assinatura_ateste(), "wb") as arquivo:
+            arquivo.write(assinatura_ateste)
+    
+    def get_assinatura_ateste(self)->bytes:
+        with open(self._arquivo_assinatura_ateste(), "rb") as arquivo:
+            assinatura_ateste = arquivo.read()
+        return assinatura_ateste
+    
+    # get/set tam_assinatura_sef
+
+    def _arquivo_tam_assinatura_sef(self) -> str:
+        return f"{self.path_arquivos}/tam_assinatura_sef.str"
+
+    def _set_tam_assinatura_sef(self, tam_assinatura_sef: bytes) -> None:
+        with open(self._arquivo_tam_assinatura_sef(), "wb") as arquivo:
+            arquivo.write(tam_assinatura_sef)
+
+    def get_tam_assinatura_sef(self) -> bytes:
+        with open(self._arquivo_tam_assinatura_sef(), "rb") as arquivo:
+            tam_assinatura_sef = arquivo.read()
+        return tam_assinatura_sef
 
     # get/set assinatura
 
@@ -138,36 +221,6 @@ class ImagemSB:
             assinatura = arquivo.read()
         return assinatura
 
-    # get/set assinatura ateste
-
-    def _arquivo_assinatura_ateste(self)-> str:
-        return f"{self.path_arquivos}/assinatura_ateste.bin"
-
-    def _set_assinatura_ateste(self, assinatura: bytes)-> None:
-        with open(self._arquivo_assinatura_ateste(), "wb") as arquivo:
-            arquivo.write(assinatura)
-    
-    def get_assinatura_ateste(self)->bytes:
-        with open(self._arquivo_assinatura_ateste(), "rb") as arquivo:
-            assinatura = arquivo.read()
-        return assinatura
-
-    # get/set codigo
-
-    def _arquivo_codigo(self) -> str:
-        return f"{self.path_arquivos}/codigo.bin"
-
-    def _set_codigo(self, codigo: bytes) -> None:
-        with open(self._arquivo_codigo(), "wb") as arquivo:
-            arquivo.write(codigo)
-
-    def get_codigo(self) -> bytes:
-        
-        with open(self._arquivo_codigo(), "rb") as arquivo:
-            codigo = arquivo.read()
-        
-        return codigo
-
     # particao
 
     def remove_particao(self) -> None:
@@ -180,18 +233,21 @@ class ImagemSB:
     # verificacoes
 
     def esta_integro(self) -> bool:
-        res = CriptoDAF.verifica_resumo_SHA256((self.get_versao_SB()+self.get_codigo()+self.get_maxdfe()) ,self.get_hash_SB())
+        res = (self.get_versao_SB() +self.get_maxdfe() +self.get_codigo()) == self.get_firmware()
         return res
 
     def esta_autentico(self, certificado) -> bool:
         msg = self.get_assinatura_ateste()
-        return CriptoDAF.verifica_assinatura_EC_P384(msg, self.get_assinatura(), certificado.chave_publica)
+        hashed = CriptoDAF.gera_resumo_SHA256(msg)
+        return CriptoDAF.verifica_assinatura_EC_P384(hashed, self.get_assinatura(), certificado.chave_publica)
 
     def esta_autentico_ateste(self, chave) ->bool:       
-        msg = self.get_hash_SB()
-        return CriptoDAF.verifica_assinatura_EC_P384(msg, self.get_assinatura_ateste(), chave)
+        msg = self.get_firmware()
+        hashed = CriptoDAF.gera_resumo_SHA256(msg)
+        return CriptoDAF.verifica_assinatura_EC_P384(hashed, self.get_assinatura_ateste(), chave)
 
     # ---
+    # Este processo de atualização serve somente para ilustrar uma maneira de validar o binário recebido.
 
     def atualizar(self, novaImagem: 'ImagemSB', certificado, ateste) -> int:
       
@@ -204,15 +260,15 @@ class ImagemSB:
         elif novaImagem.get_versao_SB() <= self.get_versao_SB():
             return 8
 
-        # Deixar comentado para não fazer a alteração da imagem, apenas fazer as validações. 
-        # Caso atualize, pode usar a imagem imagem-default que está no resources pra voltar para versão 2
 
-        # self._set_versao(novaImagem.get_versao_SB())
-        # self._set_maxdfe(novaImagem.get_maxdfe())
-        # self._set_hash(novaImagem.get_hash_SB())
-        # self._set_assinatura(novaImagem.get_assinatura())
-        # self._set_assinatura_ateste(novaImagem.get_assinatura_ateste())
-        # self._set_codigo(novaImagem.get_codigo())
+        self._set_versao(novaImagem.get_versao_SB())
+        self._set_maxdfe(novaImagem.get_maxdfe())
+        self._set_codigo(novaImagem.get_codigo())
+        self._set_firmware(novaImagem.get_firmware())
+        self._set_tam_assinatura_ateste(novaImagem.get_tam_assinatura_ateste())
+        self._set_assinatura_ateste(novaImagem.get_assinatura_ateste())
+        self._set_tam_assinatura_sef(novaImagem.get_tam_assinatura_sef())
+        self._set_assinatura(novaImagem.get_assinatura())
 
         return 0
 

@@ -669,7 +669,8 @@ class DAF(Layer):
         if not (CriptoDAF.verifica_assinatura_EC_P384(certNovo.conteudo_assinado, certNovo.assinatura, certificado.chave_publica)):
             return self.__gera_json_resposta_insucesso(Respostas.certificadoInvalido.value)
 
-        if not (CriptoDAF.verifica_assinatura_EC_P384(self.imagem_atual.get_assinatura_ateste(), Base64URLDAF.base64URLDecode(assinauraSef), certNovo.chave_publica)):
+        hashed = CriptoDAF.gera_resumo_SHA256(self.imagem_atual.get_assinatura_ateste())
+        if not (CriptoDAF.verifica_assinatura_EC_P384(hashed, Base64URLDAF.base64URLDecode(assinauraSef), certNovo.chave_publica)):
             return self.__gera_json_resposta_insucesso(Respostas.assinaturaFirmwareInvalida.value)
              
         self.ms.escrita(Artefatos.certificado, certNovo)

@@ -99,6 +99,20 @@ class CriptoDAF:
         key = RSA.import_key(privkey.chave_bytes)
         hashed = SHA256.new(msg)
         return PKCS1_v1_5.pkcs1_15.new(key).sign(hashed)
+    
+    @staticmethod
+    def gera_assinatura_EC_p384(msg: bytes, privkey: ChaveCripto) -> bytes:
+        """ Método para geração de assinatura digital 
+
+        Args:
+            msg (bytes): Mensagem a ser assinada
+            privkey (bytes): Chave privada (PEM)
+
+        Returns:
+            bytes: Assinatura digital
+        """
+        key = serialization.load_pem_private_key(privkey.chave_bytes, password=None)
+        return key.sign(msg, ec.ECDSA(hashes.SHA384()))
 
     @staticmethod
     def verifica_assinatura_EC_P384(msg:bytes, sig:bytes, pubkey:ChaveCripto) -> bool:
