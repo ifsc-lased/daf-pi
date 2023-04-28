@@ -908,7 +908,7 @@ class DAF(Layer):
 
                 if resultado == 3:
                     resposta = self.__gera_json_resposta_insucesso(
-                        Respostas.assinaturaInvalida.value)
+                        Respostas.assinaturaFirmwareInvalida.value)
                     numAtualizacoes = self.ms.leitura(ParametrosAtualizacao.falhasAtualizacao)
                     self.ms.escrita(ParametrosAtualizacao.falhasAtualizacao, numAtualizacoes+1)
                 elif resultado == 8:
