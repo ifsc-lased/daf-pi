@@ -121,8 +121,8 @@ Será feito uso do [supervisor](http://supervisord.org/) para garantir que o có
 ```bash
 cd ~/daf-pi
 sudo apt-get install supervisor
-sudo cp res/supervisord.conf /etc/supervisor/
-sudo supervisord -c /etc/supervisor/supervisord.conf
+sudo cp res/daf.conf /etc/supervisor/conf.d/
+sudo supervisord -c /etc/supervisor/conf.d/daf.conf
 sudo shutdown -r now
 ```
 :clap: Pronto! Você tem agora uma Raspberry Pi Zero W pronta para atuar como DAF.
