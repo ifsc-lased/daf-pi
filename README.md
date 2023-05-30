@@ -11,15 +11,20 @@
 
 **Sumário**
 
-- [Introdução](#introdução)
-- [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
-   - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
-   - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
-   - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
-- [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
-- [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
-- [Limitações conhecidas](#limitações-conhecidas)
-- [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
+- [DAF-pi](#daf-pi)
+  - [Introdução](#introdução)
+  - [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
+    - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
+    - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
+      - [Instalação do sistema operacional Raspberry Pi OS no cartão micro SD](#instalação-do-sistema-operacional-raspberry-pi-os-no-cartão-micro-sd)
+      - [Baixar código fonte do DAF na Raspberry PI Zero W](#baixar-código-fonte-do-daf-na-raspberry-pi-zero-w)
+      - [Configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF](#configurar-o-sistema-operacional-da-raspberry-pi-zero-w-para-que-a-mesma-atue-como-um-daf)
+    - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
+  - [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
+  - [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
+  - [Limitações conhecidas](#limitações-conhecidas)
+    - [Valor do *timeout* da camada ARQ do protocolo de comunicação](#valor-do-timeout-da-camada-arq-do-protocolo-de-comunicação)
+  - [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
 
 ## Introdução
 
@@ -45,11 +50,20 @@ Este repositório apresenta uma implementação de DAF em uma [Raspberry Pi Zero
 
 Nessa seção são apresentadas três abordagens para ter um DAF-pi pronto para ser usado pelo PAF:
 
-1. [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
-   1. Abordagem recomendada por ser mais simples
-2. [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
-   1. Caso queira instalar manualmente o código deste repositório em uma Raspberry Pi Zero W que já esteja funcional
-3. [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
+- [DAF-pi](#daf-pi)
+  - [Introdução](#introdução)
+  - [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
+    - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
+    - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
+      - [Instalação do sistema operacional Raspberry Pi OS no cartão micro SD](#instalação-do-sistema-operacional-raspberry-pi-os-no-cartão-micro-sd)
+      - [Baixar código fonte do DAF na Raspberry PI Zero W](#baixar-código-fonte-do-daf-na-raspberry-pi-zero-w)
+      - [Configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF](#configurar-o-sistema-operacional-da-raspberry-pi-zero-w-para-que-a-mesma-atue-como-um-daf)
+    - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
+  - [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
+  - [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
+  - [Limitações conhecidas](#limitações-conhecidas)
+    - [Valor do *timeout* da camada ARQ do protocolo de comunicação](#valor-do-timeout-da-camada-arq-do-protocolo-de-comunicação)
+  - [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
 
 
 ### Instalação do DAF-pi a partir de imagem ISO pronta para uso
@@ -121,8 +135,8 @@ Será feito uso do [supervisor](http://supervisord.org/) para garantir que o có
 ```bash
 cd ~/daf-pi
 sudo apt-get install supervisor
-sudo cp res/daf.conf /etc/supervisor/conf.d/
-sudo supervisord -c /etc/supervisor/conf.d/daf.conf
+sudo cp res/daf.conf /etc/supervisor/supervisord.conf
+sudo supervisord -c /etc/supervisor/supervisord.conf
 sudo shutdown -r now
 ```
 :clap: Pronto! Você tem agora uma Raspberry Pi Zero W pronta para atuar como DAF.
