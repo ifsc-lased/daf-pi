@@ -589,8 +589,8 @@ class DAF(Layer):
         
         self.ms.escrita(Artefatos.chavePrivada, ChaveCripto(""))
         self.ms.escrita(Artefatos.chavePublica,  ChaveCripto(""))
-        self.ms.escrita(Artefatos.chaveSEF, "")
-        self.ms.escrita(Artefatos.chavePAF, "")
+        self.ms.escrita(Artefatos.chaveSEF, b'')
+        self.ms.escrita(Artefatos.chavePAF, b'')
         self.ms.escrita(Guardas.Estado, Estados.inativo.value)
         self.ms.escrita(Guardas.REGOK, False)
         self.operacao = False
