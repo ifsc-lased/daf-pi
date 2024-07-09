@@ -3,14 +3,18 @@ from daf_virtual_rasp.com.arq import Arq
 from daf_virtual_rasp.com.poller import Poller
 from daf_virtual_rasp.com.enq_enum import TIPO_t
 from daf_virtual_rasp.daf.daf import DAF
+
 import sys, time, os
 import serial
 import argparse
+import logging
 
+# Porta serial padrão
+default_port = '/dev/ttyGS0'
 
 # Definindo argumentos de linha de comando
 parser = argparse.ArgumentParser(description='DAF-pi')
-parser.add_argument('-p', '--port', type=str, default='/dev/ttyGS0', help='Porta serial de comunicação (default: /dev/ttyGS0)')
+parser.add_argument('-p', '--port', type=str, default=default_port, help='Porta serial de comunicação (default: /dev/ttyGS0)')
 parser.add_argument('-P', '--port_socat', type=int, help='Porta serial de comunicação usando socat (sobrescreve o argumento -p)')
 parser.add_argument('-t', '--timeout_arq', type=float, default=2, help='Tempo de timeout da camada de arq (default: 2 segundos)')
 args = parser.parse_args()
@@ -18,6 +22,14 @@ args = parser.parse_args()
 # Recebendo argumentos de linha de comando
 port = f'/dev/pts/{args.port_socat}' if args.port_socat else args.port
 timeout_arq = args.timeout_arq
+
+# Configuração do log
+log_level = os.getenv('DAF_PI_LOG', 'INFO').upper()
+log_level = getattr(logging, log_level, logging.INFO)
+formatter = '%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s'
+logging.basicConfig(stream=sys.stdout, level=log_level, format=formatter)
+
+logging.debug('Log de DEBUG habilitado')
 
 # define parametros das camadas ARQ e Enquadramento
 max_tentativas_arq = 3

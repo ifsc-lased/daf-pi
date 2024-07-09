@@ -1,17 +1,17 @@
 from daf_virtual_rasp.imagem import ImagemSB
 from daf_virtual_rasp.utils.cripto_daf import ChaveCripto, CriptoDAF
 
-
 import sys
 import secrets
 import argparse
+import logging
 
 def gera_imagem_atual():
 
     nome_arquivo = 'imagem_atual.bin'
     path_atual = 'daf_virtual_rasp/resources/imagem/sb'
 
-    print("Carregando informações da imagem atual armazenada em", path_atual)
+    logging.debug(f"Carregando informações da imagem atual armazenada em {path_atual}")
 
     imagem_atual = ImagemSB(path_arquivos=path_atual)
 
@@ -27,7 +27,7 @@ def gera_imagem_atual():
     firmware = versao_sb + max_dfe_sef + sb
     imagem_bin = firmware + tam_sig_fab + sig_fab + tam_sig_sef + sig_sef
 
-    print("Salvando binário da imagem em", nome_arquivo)
+    logging.debug(f"Salvando binário da imagem em {nome_arquivo}")
     with open(nome_arquivo, "wb") as arquivo:
         arquivo.write(imagem_bin)
         
@@ -37,7 +37,7 @@ def gera_imagem_nova(vsb, mxd_sef, priv_key, sef_key):
 
     nome_arquivo = 'imagem_nova.bin'
     path_nova = 'daf_virtual_rasp/resources/imagem-nova/sb'
-    print("Gerando imagem com informações passadas como argumento")
+    logging.debug("Gerando imagem com informações passadas como argumento")
    
     versao_sb = vsb.to_bytes(2, byteorder='big')
     max_dfe_sef = mxd_sef.to_bytes(2, byteorder='big')
@@ -54,12 +54,12 @@ def gera_imagem_nova(vsb, mxd_sef, priv_key, sef_key):
 
     imagem_bin = firmware + tam_sig_fab.to_bytes(2, byteorder='big') + sig_fab + tam_sig_sef.to_bytes(2, byteorder='big') + sig_sef
     if(args.debug):
-        print("Tamanho assinatura ateste =", tam_sig_fab)
-        print("Tamanho assinatura sef =", tam_sig_sef, '\n')
+        logging.debug(f"Tamanho assinatura ateste = {tam_sig_fab}")
+        logging.debug(f"Tamanho assinatura sef = {tam_sig_sef} \n")
     
     imagem_nova = ImagemSB(raw_binario=imagem_bin, path_arquivos=path_nova)
 
-    print("Salvando binário da imagem em", nome_arquivo)
+    logging.debug(f"Salvando binário da imagem em {nome_arquivo}")
     with open(nome_arquivo, "wb") as arquivo:
         arquivo.write(imagem_bin)
 
@@ -108,10 +108,10 @@ else:
     imagem = gera_imagem_atual()
 
 if(args.debug):
-    print("------------------------------")
-    print("Informações da Imagem")
-    print("------------------------------")
-    print("vsb = ", int.from_bytes(imagem.get_versao_SB(),byteorder='big'))
-    print("mxd = ", int.from_bytes(imagem.get_maxdfe(),byteorder='big'))
+    logging.debug("------------------------------")
+    logging.debug("Informações da Imagem")
+    logging.debug("------------------------------")
+    logging.debug(f"vsb = {int.from_bytes(imagem.get_versao_SB(),byteorder='big')}")
+    logging.debug(f"mxd = {int.from_bytes(imagem.get_maxdfe(),byteorder='big')}")
     
 

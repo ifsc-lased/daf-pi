@@ -1,5 +1,7 @@
 import typing
 import os
+import logging
+
 from daf_virtual_rasp.utils.cripto_daf import ChaveCripto, CriptoDAF
 from daf_virtual_rasp.daf.daf_enums import Artefatos
 from daf_virtual_rasp.utils.base64URL_daf import Base64URLDAF
@@ -54,7 +56,7 @@ class ImagemSB:
             # imagem sendo adicionada agora
 
             versao = self._extrai_versao(raw_binario)
-            print("Versão recebida: " ,int.from_bytes(versao,byteorder='big'), "\n")
+            logging.debug(f"Versão recebida: {int.from_bytes(versao,byteorder='big')}")
             maxdfe = self._extrai_maxdfe(raw_binario)
             codigo = self._extrai_codigo(raw_binario) # SB
             firmware = versao + maxdfe + codigo

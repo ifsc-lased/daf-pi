@@ -174,7 +174,7 @@ Caso não tenha uma Raspberry Pi Zero W, é possível executar o [DAF-pi](https:
     pip install --upgrade pip
     pip install -r requirements.txt
     ```
-4. Edite o arquivo [`app.py`](https://github.com/ifsc-lased/daf-pi/blob/bb25e7e9233667f11d449bee811db8cb671fc096/app.py#L17) e substitua o valor `/dev/ttyGS0` que está associado ao [atributo `port`](https://github.com/ifsc-lased/daf-pi/blob/f7fecd4ed449dc3e07d3ad96e382767a2d2940ec/app.py#L17) por um dos pseudoterminais que o socat está usando. Neste exemplo será usado `/dev/pts/2`.
+4. Edite o arquivo [`app.py`](https://github.com/ifsc-lased/daf-pi/blob/0bb903b514200d3c94cd1fedf65e1af8f6b2c181/app.py#L13) e substitua o valor `/dev/ttyGS0` que está associado a [variável `default_port`](https://github.com/ifsc-lased/daf-pi/blob/0bb903b514200d3c94cd1fedf65e1af8f6b2c181/app.py#L13) por um dos pseudoterminais que o socat está usando. Neste exemplo será usado `/dev/pts/2`.
 5. Execute a aplicação DAF-pi
     ```bash
     python3 app.py
@@ -203,6 +203,34 @@ O [PAF](https://github.com/ifsc-lased/composicao-paf-sef) disponível no *kit* d
 
 > O DAF-pi, quando no estado de inutilizado, não transmitirá suas informações a cada 30 segundos, como descrito na especificação de requisitos do DAF. No caso, transmitirá essas informações (com exceção do conteúdo da partição do SB e da MT) sempre que receber uma mensagem do PAF que seja diferente da mensagem que o levaria para o modo `padrão de fábrica`.
 
+Para facilitar a inicialização da aplicação sem a necessidade de alterar variáveis no código-fonte, o DAF-pi pode receber os seguintes argumentos de linha de comando:
+- `-p`, `--port`: Especifica a porta serial de comunicação. O valor padrão é definido pela [variável `default_port`](https://github.com/ifsc-lased/daf-pi/blob/0bb903b514200d3c94cd1fedf65e1af8f6b2c181/app.py#L13).
+  
+  ```sh
+  python app.py -p /dev/ttyGS0
+  ```
+- `-P`, `--port_socat`: Especifica o número que será concatenado à string `/dev/pts/` e a definirá como porta serial de comunicação. Sobrescreve o argumento `-p`.
+    
+  ```sh
+  python app.py -P 2
+  ```
+- `-t`, `--timeout_arq`: Define o tempo de *timeout* da camada de garantia de entrega (ARQ). O valor padrão é 2 segundos.
+  
+  ```sh
+  python app.py -t 3
+  ```
+O DAF-pi utiliza a a blibioteca [*logging*](https://docs.python.org/3/library/logging.html) para auxiliar na depuração de problemas. O nível de log padrão é `INFO`. Para alterar o nível de log, basta definir a variável de ambiente `DAF_PI_LOG` com o valor desejado. Os valores possíveis são: `DEBUG`, `INFO`, `WARNING`, `ERROR` e `CRITICAL`.
+
+- Caso o DAF-pi estar instalado em uma [Rapsberry PI](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório) é necessário alterar o arquivo `/etc/supervisor/supervisord.conf` e alterar a variável de ambiente `DAF_PI_LOG` com o valor desejado. Após isso, recarregue as configurações do supervisord e reinicie o sistema.
+  ```sh
+  sudo supervisord -c /etc/supervisor/supervisord.conf
+  sudo shutdown -r now
+  ```
+- Caso for executar o DAF-pi em um [computador com Linux](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w), basta definir a variável de ambiente `DAF_PI_LOG` com o valor desejado.
+  ```sh
+  export DAF_PI_LOG=DEBUG
+  python app.py
+  ```
 ## Certificado da SEF e chave de ateste com o DAF-pi
 
 De acordo com a [Especificação Técnica de Requisitos do DAF](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf), o DAF deverá conter o certificado digital da SEF. Por outro lado, a SEF já deverá ter a chave pública, par da chave de ateste do DAF.

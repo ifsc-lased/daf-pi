@@ -1,8 +1,10 @@
-import time
 from daf_virtual_rasp.com.arq_enum import ESTADO_t, CONTROLE_t
 from daf_virtual_rasp.com.layer import Layer
-import sys
 from daf_virtual_rasp.com.enq_enum import TIPO_t
+
+import time
+import logging
+import sys
 from typing import Union
 
 class Arq(Layer):
@@ -57,7 +59,7 @@ class Arq(Layer):
 
             self.monta_quadro(campo_controle, campo_dados)
             self.superior.disable_all_superior()
-            print("DAF enviando:", self.msg, "\n")
+            logging.info(f"DAF enviando: {self.msg} \n")
             self.inferior.envia(self.msg, self.tipo)  # Envia para a subcamada inferior (Enquadramento)
             self.tentativas = 0
             self.recarrega_timeout(self.tout)
@@ -77,7 +79,7 @@ class Arq(Layer):
                     self.estado = ESTADO_t.WAIT.value
                     self.inferior.envia(self.msg, TIPO_t.PING.value) 
                 else:
-                    print("Recebido pelo DAF:", self.campo_dados, "\n")
+                    logging.info(f"Recebido pelo DAF: {self.campo_dados} \n")
                     self.superior.notifica(self.comando, self.campo_dados) 
 
             # Recebe uma mensagem já recebida e reenvia um ACK
@@ -103,13 +105,13 @@ class Arq(Layer):
             elif ((self.seq_rx == 1) and (campo_controle == CONTROLE_t.DATA_1.value)) or ((self.seq_rx == 0) and (campo_controle == CONTROLE_t.DATA_0.value)):
                  self.estado = ESTADO_t.WAIT.value
                  self.__ack(False)
-                 print("Recebido pelo DAF:", self.campo_dados, "\n")
+                 logging.info(f"Recebido pelo DAF: {self.campo_dados} \n")
                  self.superior.notifica(self.comando, self.campo_dados)
 
             # Recebe uma mensagem já recebida e reenvia um ACK
             elif ((self.seq_rx == 0) and (campo_controle == CONTROLE_t.DATA_1.value)) or ((self.seq_rx == 1) and (campo_controle == CONTROLE_t.DATA_0.value)):
                 self.estado = ESTADO_t.WAIT.value
-                print("Recebido pelo DAF:", self.campo_dados, "\n")
+                logging.info(f"Recebido pelo DAF: {self.campo_dados}\n")
                 self.__ack(True)
 
             # Recebeu o ACK errado, reenvia a mensagem
@@ -162,7 +164,7 @@ class Arq(Layer):
         Realiza o reenvio da mensagem em caso
         de Timeout ou de ACK incorreto
         '''
-        print("DAF reenviando:", self.msg, "\n")
+        logging.info(f"DAF reenviando: {self.msg} \n")
         self.inferior.envia(self.msg, self.tipo)
         self.tentativas += 1
         self.recarrega_timeout(self.tout)
