@@ -15,12 +15,11 @@ default_port = '/dev/ttyGS0'
 # Definindo argumentos de linha de comando
 parser = argparse.ArgumentParser(description='DAF-pi')
 parser.add_argument('-p', '--port', type=str, default=default_port, help='Porta serial de comunicação (default: /dev/ttyGS0)')
-parser.add_argument('-P', '--port_socat', type=int, help='Porta serial de comunicação usando socat (sobrescreve o argumento -p)')
 parser.add_argument('-t', '--timeout_arq', type=float, default=2, help='Tempo de timeout da camada de arq (default: 2 segundos)')
 args = parser.parse_args()
 
 # Recebendo argumentos de linha de comando
-port = f'/dev/pts/{args.port_socat}' if args.port_socat else args.port
+port = args.port
 timeout_arq = args.timeout_arq
 
 # Configuração do log

@@ -7,24 +7,23 @@
 >Não cabe à SEF ou ao IFSC prestar suporte sobre os componentes, códigos ou excertos de código disponíveis nesta POC, sendo a presente versão considerada final, sem previsão de alterações, correção de bugs ou melhorias.
 >
 >A SEF e o IFSC eximem-se de qualquer responsabilidade, direta ou indireta, por perdas ou danos, comprovadamente ou alegadamente, causados pelos artefatos disponibilizados nesta POC. Caso deseje usar os componentes e softwares aqui disponibilizados, você estará fazendo isto exclusivamente por sua conta e risco.
-# DAF-pi 
+# DAF-pi <!-- omit in toc -->
 
 **Sumário**
 
-- [DAF-pi](#daf-pi)
-  - [Introdução](#introdução)
-  - [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
-    - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
-    - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
-      - [Instalação do sistema operacional Raspberry Pi OS no cartão micro SD](#instalação-do-sistema-operacional-raspberry-pi-os-no-cartão-micro-sd)
-      - [Baixar código fonte do DAF na Raspberry PI Zero W](#baixar-código-fonte-do-daf-na-raspberry-pi-zero-w)
-      - [Configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF](#configurar-o-sistema-operacional-da-raspberry-pi-zero-w-para-que-a-mesma-atue-como-um-daf)
-    - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
-  - [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
-  - [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
-  - [Limitações conhecidas](#limitações-conhecidas)
-    - [Valor do *timeout* da camada ARQ do protocolo de comunicação](#valor-do-timeout-da-camada-arq-do-protocolo-de-comunicação)
-  - [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
+- [Introdução](#introdução)
+- [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
+  - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
+  - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
+    - [Instalação do sistema operacional Raspberry Pi OS no cartão micro SD](#instalação-do-sistema-operacional-raspberry-pi-os-no-cartão-micro-sd)
+    - [Baixar código fonte do DAF na Raspberry PI Zero W](#baixar-código-fonte-do-daf-na-raspberry-pi-zero-w)
+    - [Configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF](#configurar-o-sistema-operacional-da-raspberry-pi-zero-w-para-que-a-mesma-atue-como-um-daf)
+  - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
+- [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
+- [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
+- [Limitações conhecidas](#limitações-conhecidas)
+  - [Valor do *timeout* da camada ARQ do protocolo de comunicação](#valor-do-timeout-da-camada-arq-do-protocolo-de-comunicação)
+- [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
 
 ## Introdução
 
@@ -116,7 +115,7 @@ ssh pi@raspberrypi.local
 cd ~
 git clone https://github.com/ifsc-lased/daf-pi
 cd daf-pi
-python3 -m venv venv
+python3.9 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
@@ -149,9 +148,9 @@ sudo shutdown -r now
 Caso não tenha uma Raspberry Pi Zero W, é possível executar o [DAF-pi](https://github.com/ifsc-lased/daf-pi) em um computador com Linux e usar o aplicativo [socat](http://www.dest-unreach.org/socat) (*Multipurpose relay (SOcket CAT)*) para fazer o encaminhamento entre dois pseudoterminais. Essa abordagem permite que um PAF, que esteja sendo executado no mesmo computador, consiga acessar o DAF-pi.
 
 
-1. Instale os pacotes Python3 e socat
+1. Instale os pacotes Python3.9 e socat
     ```bash
-    sudo apt install python3 python3-venv socat
+    sudo apt install python3.9 python3.9-dev python3.9-venv socat
     ```
 2. Execute o `socat` para criar um *relay* entre dois pseudoterminais (`/dev/pts`).  **Atenção:** é necessário deixar o `socat` em execução.
     ```bash
@@ -169,17 +168,16 @@ Caso não tenha uma Raspberry Pi Zero W, é possível executar o [DAF-pi](https:
     ```bash
     git clone https://github.com/ifsc-lased/daf-pi.git
     cd daf-pi
-    python3 -m venv venv
+    python3.9 -m venv venv
     source venv/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
     ```
-4. Edite o arquivo [`app.py`](https://github.com/ifsc-lased/daf-pi/blob/0bb903b514200d3c94cd1fedf65e1af8f6b2c181/app.py#L13) e substitua o valor `/dev/ttyGS0` que está associado a [variável `default_port`](https://github.com/ifsc-lased/daf-pi/blob/0bb903b514200d3c94cd1fedf65e1af8f6b2c181/app.py#L13) por um dos pseudoterminais que o socat está usando. Neste exemplo será usado `/dev/pts/2`.
-5. Execute a aplicação DAF-pi
+4. Execute a aplicação DAF-pi passando como valor do parâmetro `-p` um dos pseudoterminais que o socat está usando. Neste exemplo será usado `/dev/pts/2`. 
     ```bash
-    python3 app.py
+    python3.9 app.py -p /dev/pts/2
     ```
-6. :clap: Pronto! Você tem agora o DAF-pi sendo executado no seu computador com Linux. 
+5. :clap: Pronto! Você tem agora o DAF-pi sendo executado no seu computador com Linux. 
    - Caso queira testar este DAF, use a [composição PAF SEF](https://github.com/ifsc-lased/composicao-paf-sef), mas lembre-se que é necessário definir o valor da [variável `porta` no código do PAF](https://github.com/ifsc-lased/composicao-paf-sef/blob/c0ca54e4f7d6f9aaecf22957351d339f8a068426/paf/app/app/daf/com/pdafcdc.py#L96) (antes do if) para o pseudoterminal que o socat associou.
       - Exemplo: `porta='pts/3'`.     
 
@@ -207,17 +205,12 @@ Para facilitar a inicialização da aplicação sem a necessidade de alterar var
 - `-p`, `--port`: Especifica a porta serial de comunicação. O valor padrão é definido pela [variável `default_port`](https://github.com/ifsc-lased/daf-pi/blob/0bb903b514200d3c94cd1fedf65e1af8f6b2c181/app.py#L13).
   
   ```sh
-  python app.py -p /dev/ttyGS0
-  ```
-- `-P`, `--port_socat`: Especifica o número que será concatenado à string `/dev/pts/` e a definirá como porta serial de comunicação. Sobrescreve o argumento `-p`.
-    
-  ```sh
-  python app.py -P 2
+  python3.9 app.py -p /dev/ttyGS0
   ```
 - `-t`, `--timeout_arq`: Define o tempo de *timeout* da camada de garantia de entrega (ARQ). O valor padrão é 2 segundos.
   
   ```sh
-  python app.py -t 3
+  python3.9 app.py -t 3
   ```
 O DAF-pi utiliza a a blibioteca [*logging*](https://docs.python.org/3/library/logging.html) para auxiliar na depuração de problemas. O nível de log padrão é `INFO`. Para alterar o nível de log, basta definir a variável de ambiente `DAF_PI_LOG` com o valor desejado. Os valores possíveis são: `DEBUG`, `INFO`, `WARNING`, `ERROR` e `CRITICAL`.
 
@@ -229,7 +222,7 @@ O DAF-pi utiliza a a blibioteca [*logging*](https://docs.python.org/3/library/lo
 - Caso for executar o DAF-pi em um [computador com Linux](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w), basta definir a variável de ambiente `DAF_PI_LOG` com o valor desejado.
   ```sh
   export DAF_PI_LOG=DEBUG
-  python app.py
+  python3.9 app.py
   ```
 ## Certificado da SEF e chave de ateste com o DAF-pi
 
