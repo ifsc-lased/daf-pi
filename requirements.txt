@@ -8,3 +8,4 @@ pytype==2020.1.8
 tinydb==4.2.0
 wheel==0.40.0
 pyserial==3.4
+cffi==1.16.0

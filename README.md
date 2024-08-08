@@ -48,21 +48,12 @@ Este repositório apresenta uma implementação de DAF em uma [Raspberry Pi Zero
 ## Instalação e configuração do DAF-pi
 
 Nessa seção são apresentadas três abordagens para ter um DAF-pi pronto para ser usado pelo PAF:
-
-- [DAF-pi](#daf-pi)
-  - [Introdução](#introdução)
-  - [Instalação e configuração do DAF-pi](#instalação-e-configuração-do-daf-pi)
-    - [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
-    - [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
-      - [Instalação do sistema operacional Raspberry Pi OS no cartão micro SD](#instalação-do-sistema-operacional-raspberry-pi-os-no-cartão-micro-sd)
-      - [Baixar código fonte do DAF na Raspberry PI Zero W](#baixar-código-fonte-do-daf-na-raspberry-pi-zero-w)
-      - [Configurar o sistema operacional da Raspberry Pi Zero W para que a mesma atue como um DAF](#configurar-o-sistema-operacional-da-raspberry-pi-zero-w-para-que-a-mesma-atue-como-um-daf)
-    - [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
-  - [Facilidades específicas do DAF-pi para ajudar no desenvolvimento do PAF](#facilidades-específicas-do-daf-pi-para-ajudar-no-desenvolvimento-do-paf)
-  - [Certificado da SEF e chave de ateste com o DAF-pi](#certificado-da-sef-e-chave-de-ateste-com-o-daf-pi)
-  - [Limitações conhecidas](#limitações-conhecidas)
-    - [Valor do *timeout* da camada ARQ do protocolo de comunicação](#valor-do-timeout-da-camada-arq-do-protocolo-de-comunicação)
-  - [Dependências e bibliotecas de terceiros](#dependências-e-bibliotecas-de-terceiros)
+<!-- no toc -->
+1. [Instalação do DAF-pi a partir de imagem ISO pronta para uso](#instalação-do-daf-pi-a-partir-de-imagem-iso-pronta-para-uso)
+   1. Abordagem recomendada por ser mais simples
+2. [Instalação manual do DAF-pi a partir do código disponível nesse repositório](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório)
+   1. Caso queira instalar manualmente o código deste repositório em uma Raspberry Pi Zero W que já esteja funcional
+3. [Executar o DAF-pi em um computador com Linux e sem a necessidade de uma Raspberry Pi Zero W](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w)
 
 
 ### Instalação do DAF-pi a partir de imagem ISO pronta para uso
@@ -212,18 +203,21 @@ Para facilitar a inicialização da aplicação sem a necessidade de alterar var
   ```sh
   python3.9 app.py -t 3
   ```
-O DAF-pi utiliza a a blibioteca [*logging*](https://docs.python.org/3/library/logging.html) para auxiliar na depuração de problemas. O nível de log padrão é `INFO`. Para alterar o nível de log, basta definir a variável de ambiente `DAF_PI_LOG` com o valor desejado. Os valores possíveis são: `DEBUG`, `INFO`, `WARNING`, `ERROR` e `CRITICAL`.
+O DAF-pi utiliza a biblioteca [*logging*](https://docs.python.org/3/library/logging.html) para auxiliar na depuração da aplicação. Para ajustar o nível de log, defina a variável de ambiente `DAF_PI_LOG` com um dos seguintes valores: `DEBUG`, `INFO`, `WARNING`, `ERROR` ou `CRITICAL`.
 
-- Caso o DAF-pi estar instalado em uma [Rapsberry PI](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório) é necessário alterar o arquivo `/etc/supervisor/supervisord.conf` e alterar a variável de ambiente `DAF_PI_LOG` com o valor desejado. Após isso, recarregue as configurações do supervisord e reinicie o sistema.
-  ```sh
-  sudo supervisord -c /etc/supervisor/supervisord.conf
-  sudo shutdown -r now
-  ```
-- Caso for executar o DAF-pi em um [computador com Linux](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w), basta definir a variável de ambiente `DAF_PI_LOG` com o valor desejado.
-  ```sh
-  export DAF_PI_LOG=DEBUG
-  python3.9 app.py
-  ```
+- Na [Rapsberry PI](#instalação-manual-do-daf-pi-a-partir-do-código-disponível-nesse-repositório):
+  1. Edite o arquivo `/etc/supervisor/supervisord.conf` para definir a variável de ambiente `DAF_PI_LOG` com o valor desejado.
+  2. Recarregue as configurações do `supervisord` e reinicie o sistema com os seguintes comandos:
+     ```sh
+     sudo supervisord -c /etc/supervisor/supervisord.conf
+     sudo shutdown -r now
+     ```
+- No [Linux](#executar-o-daf-pi-em-um-computador-com-linux-e-sem-a-necessidade-de-uma-raspberry-pi-zero-w):
+  1. Defina a variável de ambiente `DAF_PI_LOG` com o valor desejado e execute o DAF-pi:
+     ```sh
+     export DAF_PI_LOG=DEBUG
+     python3.9 app.py
+     ```
 ## Certificado da SEF e chave de ateste com o DAF-pi
 
 De acordo com a [Especificação Técnica de Requisitos do DAF](https://www.sef.sc.gov.br/arquivos_portal/servicos/159/Especificacao_de_Requisitos_do_DAF___versao_3.0.0.pdf), o DAF deverá conter o certificado digital da SEF. Por outro lado, a SEF já deverá ter a chave pública, par da chave de ateste do DAF.
